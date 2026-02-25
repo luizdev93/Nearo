@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "nearo-temp",
-    "slug": "nearo-temp",
+    "name": "Nearo",
+    "slug": "nearo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nearotemp",
+    "scheme": "nearo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,23 +14,52 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.nearo.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Nearo needs access to your camera to take photos for listings.",
+        "NSPhotoLibraryUsageDescription": "Nearo needs access to your photo library to upload images.",
+        "NSLocationWhenInUseUsageDescription": "Nearo uses your location to show nearby listings."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.nearo.app",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-secure-store",
+      "expo-localization",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Nearo uses your location to show nearby listings."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Nearo needs access to your photos to upload images.",
+          "cameraPermission": "Nearo needs access to your camera to take photos."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

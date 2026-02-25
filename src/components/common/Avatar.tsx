@@ -1,0 +1,56 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
+import { colors, borderRadius } from '../../theme';
+
+interface AvatarProps {
+  uri: string | null;
+  name: string;
+  size?: number;
+}
+
+export function Avatar({ uri, name, size = 40 }: AvatarProps) {
+  const initials = name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  if (uri) {
+    return (
+      <Image
+        source={{ uri }}
+        style={[styles.image, { width: size, height: size, borderRadius: size / 2 }]}
+        contentFit="cover"
+        transition={200}
+      />
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.placeholder,
+        { width: size, height: size, borderRadius: size / 2 },
+      ]}
+    >
+      <Text style={[styles.initials, { fontSize: size * 0.4 }]}>{initials || '?'}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  image: {
+    backgroundColor: colors.backgroundSecondary,
+  },
+  placeholder: {
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initials: {
+    color: colors.textInverse,
+    fontWeight: '600',
+  },
+});

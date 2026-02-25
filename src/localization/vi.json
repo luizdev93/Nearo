@@ -1,0 +1,193 @@
+{
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "retry": "Thử lại",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "confirm": "Xác nhận",
+    "done": "Xong",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp",
+    "search": "Tìm kiếm",
+    "no_results": "Không tìm thấy kết quả",
+    "pull_to_refresh": "Kéo xuống để làm mới",
+    "see_all": "Xem tất cả"
+  },
+  "auth": {
+    "login": {
+      "title": "Chào mừng đến Nearo",
+      "subtitle": "Mua & bán tại địa phương",
+      "phone_placeholder": "Số điện thoại",
+      "continue": "Tiếp tục",
+      "invalid_phone": "Vui lòng nhập số điện thoại hợp lệ"
+    },
+    "otp": {
+      "title": "Xác minh số điện thoại",
+      "subtitle": "Nhập mã đã gửi đến {{phone}}",
+      "resend": "Gửi lại mã",
+      "resend_in": "Gửi lại sau {{seconds}}s",
+      "verify": "Xác minh",
+      "invalid_code": "Mã xác minh không hợp lệ"
+    },
+    "sign_out": "Đăng xuất"
+  },
+  "tabs": {
+    "home": "Trang chủ",
+    "search": "Tìm kiếm",
+    "create": "Đăng bán",
+    "chats": "Tin nhắn",
+    "profile": "Cá nhân"
+  },
+  "home": {
+    "title": "Nearo",
+    "featured": "Nổi bật",
+    "nearby": "Gần đây",
+    "recent": "Tin đăng mới",
+    "empty": "Chưa có tin đăng. Hãy là người đầu tiên!"
+  },
+  "listing": {
+    "create": {
+      "title": "Tạo tin đăng",
+      "field_title": "Tiêu đề",
+      "field_title_placeholder": "Bạn đang bán gì?",
+      "field_description": "Mô tả",
+      "field_description_placeholder": "Mô tả sản phẩm...",
+      "field_category": "Danh mục",
+      "field_price": "Giá",
+      "field_price_placeholder": "0",
+      "field_condition": "Tình trạng",
+      "condition_new": "Mới",
+      "condition_used": "Đã sử dụng",
+      "field_negotiable": "Thương lượng",
+      "field_location": "Địa điểm",
+      "field_images": "Ảnh",
+      "add_photos": "Thêm ảnh",
+      "publish": "Đăng tin",
+      "publishing": "Đang đăng...",
+      "success": "Đăng tin thành công!",
+      "max_images": "Tối đa {{max}} ảnh"
+    },
+    "detail": {
+      "chat_seller": "Nhắn tin cho người bán",
+      "favorite": "Yêu thích",
+      "unfavorite": "Bỏ yêu thích",
+      "report": "Báo cáo",
+      "condition": "Tình trạng",
+      "negotiable": "Thương lượng",
+      "featured_badge": "Nổi bật",
+      "seller": "Người bán",
+      "member_since": "Thành viên từ {{date}}",
+      "sold": "Đã bán",
+      "removed": "Đã gỡ"
+    },
+    "promote": {
+      "title": "Quảng bá tin đăng",
+      "description": "Tăng độ hiển thị! Tin đăng sẽ được nổi bật trong 24 giờ.",
+      "promote_button": "Quảng bá ngay",
+      "already_featured": "Tin đăng này đã được nổi bật"
+    }
+  },
+  "search": {
+    "title": "Tìm kiếm",
+    "placeholder": "Tìm tin đăng...",
+    "filters": "Bộ lọc",
+    "filter": {
+      "category": "Danh mục",
+      "price_range": "Khoảng giá",
+      "min_price": "Giá thấp nhất",
+      "max_price": "Giá cao nhất",
+      "condition": "Tình trạng",
+      "negotiable_only": "Chỉ thương lượng",
+      "sort": "Sắp xếp theo",
+      "sort_newest": "Mới nhất",
+      "sort_price_low": "Giá: Thấp đến Cao",
+      "sort_price_high": "Giá: Cao đến Thấp",
+      "apply": "Áp dụng bộ lọc",
+      "clear": "Xóa tất cả"
+    },
+    "no_results": "Không có tin đăng phù hợp"
+  },
+  "categories": {
+    "title": "Danh mục",
+    "vehicles": "Xe cộ",
+    "real_estate": "Bất động sản",
+    "jobs": "Việc làm",
+    "electronics": "Điện tử",
+    "home_furniture": "Nhà & Nội thất",
+    "fashion": "Thời trang",
+    "services": "Dịch vụ",
+    "others": "Khác",
+    "all": "Tất cả danh mục"
+  },
+  "chat": {
+    "title": "Tin nhắn",
+    "empty": "Chưa có cuộc trò chuyện",
+    "placeholder": "Nhập tin nhắn...",
+    "send": "Gửi",
+    "quick_available": "Còn hàng không?",
+    "quick_offer": "Giá có thương lượng được không?",
+    "image_attachment": "Ảnh"
+  },
+  "profile": {
+    "title": "Cá nhân",
+    "edit": "Chỉnh sửa",
+    "my_listings": "Tin đăng của tôi",
+    "active_listings": "Đang bán",
+    "sold_listings": "Đã bán",
+    "favorites": "Yêu thích",
+    "notifications": "Thông báo",
+    "settings": "Cài đặt",
+    "language": "Ngôn ngữ",
+    "rating": "{{rating}} ({{count}} đánh giá)",
+    "no_listings": "Chưa có tin đăng",
+    "no_favorites": "Chưa có yêu thích",
+    "login_required": "Vui lòng đăng nhập để xem hồ sơ"
+  },
+  "edit_profile": {
+    "title": "Chỉnh sửa hồ sơ",
+    "name": "Tên",
+    "name_placeholder": "Tên của bạn",
+    "photo": "Ảnh đại diện",
+    "change_photo": "Đổi ảnh",
+    "language": "Ngôn ngữ",
+    "save": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "success": "Cập nhật hồ sơ thành công!"
+  },
+  "rating": {
+    "title": "Đánh giá người dùng",
+    "submit": "Gửi đánh giá",
+    "already_rated": "Bạn đã đánh giá người dùng này",
+    "success": "Đã gửi đánh giá!"
+  },
+  "report": {
+    "title": "Báo cáo",
+    "reason_spam": "Spam",
+    "reason_scam": "Lừa đảo",
+    "reason_illegal": "Nội dung bất hợp pháp",
+    "reason_other": "Khác",
+    "submit": "Gửi báo cáo",
+    "success": "Đã gửi báo cáo. Cảm ơn bạn."
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "empty": "Không có thông báo",
+    "new_message": "Tin nhắn mới",
+    "listing_update": "Cập nhật tin đăng",
+    "rating_received": "Đánh giá mới"
+  },
+  "favorites": {
+    "title": "Yêu thích",
+    "empty": "Chưa có yêu thích. Nhấn tim để lưu tin đăng."
+  },
+  "errors": {
+    "network": "Lỗi mạng. Vui lòng kiểm tra kết nối.",
+    "session_expired": "Phiên đã hết hạn. Vui lòng đăng nhập lại.",
+    "image_upload": "Tải ảnh thất bại. Vui lòng thử lại.",
+    "message_send": "Gửi tin nhắn thất bại. Nhấn để thử lại.",
+    "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+  }
+}

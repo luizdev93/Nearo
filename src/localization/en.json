@@ -1,0 +1,193 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "done": "Done",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "no_results": "No results found",
+    "pull_to_refresh": "Pull to refresh",
+    "see_all": "See all"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome to Nearo",
+      "subtitle": "Buy & sell locally",
+      "phone_placeholder": "Phone number",
+      "continue": "Continue",
+      "invalid_phone": "Please enter a valid phone number"
+    },
+    "otp": {
+      "title": "Verify your number",
+      "subtitle": "Enter the code sent to {{phone}}",
+      "resend": "Resend code",
+      "resend_in": "Resend in {{seconds}}s",
+      "verify": "Verify",
+      "invalid_code": "Invalid verification code"
+    },
+    "sign_out": "Sign out"
+  },
+  "tabs": {
+    "home": "Home",
+    "search": "Search",
+    "create": "Sell",
+    "chats": "Chats",
+    "profile": "Profile"
+  },
+  "home": {
+    "title": "Nearo",
+    "featured": "Featured",
+    "nearby": "Nearby",
+    "recent": "Recent listings",
+    "empty": "No listings yet. Be the first to post!"
+  },
+  "listing": {
+    "create": {
+      "title": "Create Listing",
+      "field_title": "Title",
+      "field_title_placeholder": "What are you selling?",
+      "field_description": "Description",
+      "field_description_placeholder": "Describe your item...",
+      "field_category": "Category",
+      "field_price": "Price",
+      "field_price_placeholder": "0",
+      "field_condition": "Condition",
+      "condition_new": "New",
+      "condition_used": "Used",
+      "field_negotiable": "Negotiable",
+      "field_location": "Location",
+      "field_images": "Photos",
+      "add_photos": "Add photos",
+      "publish": "Publish",
+      "publishing": "Publishing...",
+      "success": "Listing published!",
+      "max_images": "Maximum {{max}} photos"
+    },
+    "detail": {
+      "chat_seller": "Chat with Seller",
+      "favorite": "Favorite",
+      "unfavorite": "Remove favorite",
+      "report": "Report",
+      "condition": "Condition",
+      "negotiable": "Negotiable",
+      "featured_badge": "Featured",
+      "seller": "Seller",
+      "member_since": "Member since {{date}}",
+      "sold": "Sold",
+      "removed": "Removed"
+    },
+    "promote": {
+      "title": "Promote Listing",
+      "description": "Get more visibility! Your listing will be featured for 24 hours.",
+      "promote_button": "Promote Now",
+      "already_featured": "This listing is already featured"
+    }
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search listings...",
+    "filters": "Filters",
+    "filter": {
+      "category": "Category",
+      "price_range": "Price range",
+      "min_price": "Min price",
+      "max_price": "Max price",
+      "condition": "Condition",
+      "negotiable_only": "Negotiable only",
+      "sort": "Sort by",
+      "sort_newest": "Newest first",
+      "sort_price_low": "Price: Low to High",
+      "sort_price_high": "Price: High to Low",
+      "apply": "Apply filters",
+      "clear": "Clear all"
+    },
+    "no_results": "No listings match your search"
+  },
+  "categories": {
+    "title": "Categories",
+    "vehicles": "Vehicles",
+    "real_estate": "Real Estate",
+    "jobs": "Jobs",
+    "electronics": "Electronics",
+    "home_furniture": "Home & Furniture",
+    "fashion": "Fashion",
+    "services": "Services",
+    "others": "Others",
+    "all": "All Categories"
+  },
+  "chat": {
+    "title": "Chats",
+    "empty": "No conversations yet",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "quick_available": "Still available?",
+    "quick_offer": "Is the price negotiable?",
+    "image_attachment": "Photo"
+  },
+  "profile": {
+    "title": "Profile",
+    "edit": "Edit Profile",
+    "my_listings": "My Listings",
+    "active_listings": "Active",
+    "sold_listings": "Sold",
+    "favorites": "Favorites",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "language": "Language",
+    "rating": "{{rating}} ({{count}} reviews)",
+    "no_listings": "No listings yet",
+    "no_favorites": "No favorites yet",
+    "login_required": "Please sign in to view your profile"
+  },
+  "edit_profile": {
+    "title": "Edit Profile",
+    "name": "Name",
+    "name_placeholder": "Your name",
+    "photo": "Profile Photo",
+    "change_photo": "Change photo",
+    "language": "Language",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "success": "Profile updated!"
+  },
+  "rating": {
+    "title": "Rate User",
+    "submit": "Submit Rating",
+    "already_rated": "You have already rated this user",
+    "success": "Rating submitted!"
+  },
+  "report": {
+    "title": "Report",
+    "reason_spam": "Spam",
+    "reason_scam": "Scam",
+    "reason_illegal": "Illegal content",
+    "reason_other": "Other",
+    "submit": "Submit Report",
+    "success": "Report submitted. Thank you."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications",
+    "new_message": "New message",
+    "listing_update": "Listing update",
+    "rating_received": "New rating received"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "empty": "No favorites yet. Heart a listing to save it here."
+  },
+  "errors": {
+    "network": "Network error. Please check your connection.",
+    "session_expired": "Session expired. Please sign in again.",
+    "image_upload": "Failed to upload image. Please try again.",
+    "message_send": "Failed to send message. Tap to retry.",
+    "generic": "Something went wrong. Please try again."
+  }
+}
