@@ -19,8 +19,6 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="listing/[id]" options={{ headerShown: true, title: '' }} />
           <Stack.Screen name="chat/[id]" options={{ headerShown: true, title: '' }} />
-          <Stack.Screen name="user/[id]" options={{ headerShown: true, title: '' }} />
-          <Stack.Screen name="favorites" options={{ headerShown: true, title: '' }} />
           <Stack.Screen name="edit-profile" options={{ headerShown: true, title: '' }} />
           <Stack.Screen name="notifications" options={{ headerShown: true, title: '' }} />
           <Stack.Screen name="promote/[id]" options={{ headerShown: true, title: '' }} />

@@ -7,7 +7,7 @@ const HORIZONTAL_PADDING = spacing.lg * 2;
 const CARD_WIDTH_2COL = (SCREEN_WIDTH - spacing.lg * 3) / 2;
 const CARD_WIDTH_1COL = SCREEN_WIDTH - HORIZONTAL_PADDING;
 
-type SkeletonVariant = 'card' | 'list' | 'avatar';
+type SkeletonVariant = 'card' | 'list' | 'avatar' | 'horizontalCard';
 
 interface LoadingSkeletonProps {
   variant: SkeletonVariant;
@@ -57,6 +57,19 @@ export function LoadingSkeleton({ variant, fullWidth }: LoadingSkeletonProps) {
     );
   }
 
+  if (variant === 'horizontalCard') {
+    return (
+      <Animated.View style={[styles.horizontalCard, { opacity: pulse }]}>
+        <View style={styles.horizontalCardImage} />
+        <View style={styles.horizontalCardContent}>
+          <View style={[styles.lineShort, styles.horizontalLine]} />
+          <View style={[styles.lineLong, styles.horizontalLine]} />
+          <View style={[styles.lineMedium, styles.horizontalLine]} />
+        </View>
+      </Animated.View>
+    );
+  }
+
   if (variant === 'list') {
     return (
       <Animated.View style={[styles.listRow, { opacity: pulse }]}>
@@ -81,18 +94,18 @@ export function LoadingSkeleton({ variant, fullWidth }: LoadingSkeletonProps) {
 }
 
 /** Grid of card skeletons (e.g. for feed). */
-export function LoadingSkeletonGrid({ count = 4, fullWidth }: { count?: number; fullWidth?: boolean }) {
+export function LoadingSkeletonGrid({ count = 4, fullWidth, horizontal }: { count?: number; fullWidth?: boolean; horizontal?: boolean }) {
   return (
-    <View style={[styles.grid, fullWidth && styles.gridSingle]}>
+    <View style={[styles.grid, (fullWidth || horizontal) && styles.gridSingle]}>
       {Array.from({ length: count }).map((_, i) => (
-        <LoadingSkeleton key={i} variant="card" fullWidth={fullWidth} />
+        <LoadingSkeleton key={i} variant={horizontal ? 'horizontalCard' : 'card'} fullWidth={fullWidth} />
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {},
+  card: {
     borderRadius: borderRadius.card,
     overflow: 'hidden',
     marginBottom: spacing.md,
@@ -132,6 +145,28 @@ const styles = StyleSheet.create({
   },
   gridSingle: {
     flexDirection: 'column',
+  },
+  horizontalCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.sm,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    borderRadius: borderRadius.card,
+    backgroundColor: colors.surface,
+  },
+  horizontalCardImage: {
+    width: 96,
+    height: 72,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.backgroundSecondary,
+  },
+  horizontalCardContent: {
+    flex: 1,
+    gap: 6,
+  },
+  horizontalLine: {
+    height: 12,
   },
   listRow: {
     flexDirection: 'row',

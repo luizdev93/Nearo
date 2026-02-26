@@ -116,11 +116,11 @@ export default function SearchScreen() {
   );
 
   const renderItem = ({ item }: { item: ListingCard }) => (
-    <ListingCardComponent listing={item} fullWidth />
+    <ListingCardComponent listing={item} horizontal />
   );
 
   const renderEmpty = () => {
-    if (isLoading) return <LoadingSkeletonGrid count={6} fullWidth />;
+    if (isLoading) return <LoadingSkeletonGrid count={6} horizontal />;
     if (!query && searchResults.length === 0) {
       return (
         <EmptyState
