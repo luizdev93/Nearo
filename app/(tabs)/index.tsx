@@ -11,12 +11,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { SectionHeader } from '../../src/components/layout/SectionHeader';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../../src/theme';
 import { ListingCardComponent } from '../../src/components/cards/ListingCard';
 import { EmptyState } from '../../src/components/common/EmptyState';
+import { LoadingSkeletonGrid } from '../../src/components/feedback/LoadingSkeleton';
 import { useListingStore } from '../../src/state/listing_store';
 import { useUserStore } from '../../src/state/user_store';
 import { useAuthStore } from '../../src/state/auth_store';
@@ -82,7 +84,7 @@ export default function HomeScreen() {
     <View>
       {featuredListings.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('home.featured')}</Text>
+          <SectionHeader title={t('home.featured')} />
           <FlatList
             data={featuredListings}
             renderItem={renderFeaturedItem}
@@ -93,9 +95,7 @@ export default function HomeScreen() {
           />
         </View>
       )}
-      <Text style={[styles.sectionTitle, styles.recentTitle]}>
-        {t('home.recent')}
-      </Text>
+      <SectionHeader title={t('home.recent')} />
     </View>
   );
 
@@ -113,28 +113,30 @@ export default function HomeScreen() {
   };
 
   const renderEmpty = () => {
-    if (isLoading) return null;
+    if (isLoading) return <LoadingSkeletonGrid count={6} />;
     return <EmptyState icon="storefront-outline" title={t('home.empty')} />;
   };
 
   return (
-    <FlatList
-      data={feedListings}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      numColumns={2}
-      columnWrapperStyle={styles.row}
-      contentContainerStyle={styles.list}
-      ListHeaderComponent={renderHeader}
-      ListFooterComponent={renderFooter}
-      ListEmptyComponent={renderEmpty}
-      onEndReached={loadMoreFeed}
-      onEndReachedThreshold={0.5}
-      refreshControl={
-        <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
-      }
-      showsVerticalScrollIndicator={false}
-    />
+    <ScreenContainer noPadding>
+      <FlatList
+        data={feedListings}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.list}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmpty}
+        onEndReached={loadMoreFeed}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      />
+    </ScreenContainer>
   );
 }
 
@@ -145,14 +147,6 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.h3,
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  recentTitle: {
-    marginTop: spacing.sm,
   },
   featuredList: {
     gap: spacing.md,
@@ -177,7 +171,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: colors.overlayDark,
   },
   featuredPrice: {
     ...typography.label,

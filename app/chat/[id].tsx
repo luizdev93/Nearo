@@ -10,11 +10,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../../src/theme';
-import { TextInput } from '../../src/components/inputs/TextInput';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { ChatBubble } from '../../src/components/chat/ChatBubble';
+import { ChatInputBar } from '../../src/components/chat/ChatInputBar';
 import { useAuthStore } from '../../src/state/auth_store';
 import { useChatStore } from '../../src/state/chat_store';
 import { Message } from '../../src/models/message';
@@ -66,23 +66,19 @@ export default function ChatConversationScreen() {
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isMine = item.sender_id === user?.id;
-
     return (
-      <View style={[styles.messageBubbleWrapper, isMine && styles.messageMineWrapper]}>
-        <View style={[styles.messageBubble, isMine ? styles.bubbleMine : styles.bubbleOther]}>
-          <Text style={[styles.messageText, isMine && styles.messageTextMine]}>
-            {item.content}
-          </Text>
-        </View>
-        <Text style={styles.messageTime}>{formatChatTimestamp(item.created_at)}</Text>
-      </View>
+      <ChatBubble
+        message={item.content}
+        isMine={!!isMine}
+        timestamp={formatChatTimestamp(item.created_at)}
+      />
     );
   };
 
   return (
     <>
       <Stack.Screen options={{ title: t('chat.title') }} />
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+      <ScreenContainer edges={['top', 'left', 'right']} noPadding>
         <KeyboardAvoidingView
           style={styles.container}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -114,7 +110,6 @@ export default function ChatConversationScreen() {
             />
           )}
 
-          {/* Quick Actions */}
           <View style={styles.quickActions}>
             <TouchableOpacity
               style={styles.quickButton}
@@ -130,27 +125,15 @@ export default function ChatConversationScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Input */}
-          <View style={styles.inputContainer}>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                placeholder={t('chat.placeholder')}
-                value={text}
-                onChangeText={setText}
-                multiline
-                style={styles.textInput}
-              />
-            </View>
-            <TouchableOpacity
-              style={[styles.sendButton, !text.trim() && styles.sendButtonDisabled]}
-              onPress={handleSend}
-              disabled={!text.trim() || isSending}
-            >
-              <Ionicons name="send" size={20} color={colors.textInverse} />
-            </TouchableOpacity>
-          </View>
+          <ChatInputBar
+            value={text}
+            onChange={setText}
+            onSend={handleSend}
+            placeholder={t('chat.placeholder')}
+            disabled={isSending}
+          />
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </ScreenContainer>
     </>
   );
 }
@@ -179,7 +162,7 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     padding: spacing.md,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.bubble,
     maxWidth: '100%',
   },
   bubbleMine: {
@@ -201,7 +184,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textTertiary,
     marginTop: 2,
-    fontSize: 10,
   },
   loadingMore: {
     padding: spacing.md,
@@ -222,34 +204,5 @@ const styles = StyleSheet.create({
   quickButtonText: {
     ...typography.caption,
     color: colors.primary,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    padding: spacing.md,
-    gap: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
-  },
-  inputWrapper: {
-    flex: 1,
-  },
-  textInput: {
-    maxHeight: 100,
-    borderWidth: 0,
-    backgroundColor: colors.surfaceSecondary,
-    borderRadius: borderRadius.xl,
-    paddingVertical: spacing.sm,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendButtonDisabled: {
-    opacity: 0.5,
   },
 });

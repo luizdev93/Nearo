@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList } from 'react-native';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing } from '../src/theme';
+import { ScreenContainer } from '../src/components/layout/ScreenContainer';
 import { ListingCardComponent } from '../src/components/cards/ListingCard';
 import { EmptyState } from '../src/components/common/EmptyState';
 import { LoadingScreen } from '../src/components/common/LoadingScreen';
@@ -36,16 +37,18 @@ export default function FavoritesScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t('favorites.title') }} />
-      <FlatList
-        data={favorites}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={renderEmpty}
-        showsVerticalScrollIndicator={false}
-      />
+      <ScreenContainer noPadding>
+        <FlatList
+          data={favorites}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={renderEmpty}
+          showsVerticalScrollIndicator={false}
+        />
+      </ScreenContainer>
     </>
   );
 }

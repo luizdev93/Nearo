@@ -14,10 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../../src/theme';
-import { TextInput } from '../../src/components/inputs/TextInput';
-import { Button } from '../../src/components/common/Button';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { TextInputField } from '../../src/components/form/TextInputField';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { SecondaryButton } from '../../src/components/ui/SecondaryButton';
 import { ListingCardComponent } from '../../src/components/cards/ListingCard';
 import { EmptyState } from '../../src/components/common/EmptyState';
+import { LoadingSkeletonGrid } from '../../src/components/feedback/LoadingSkeleton';
 import { useListingStore } from '../../src/state/listing_store';
 import { ListingFilters, ListingCondition } from '../../src/models/listing';
 import { CATEGORIES, Category } from '../../src/models/category';
@@ -66,7 +69,7 @@ export default function SearchScreen() {
   );
 
   const renderEmpty = () => {
-    if (isLoading) return null;
+    if (isLoading) return <LoadingSkeletonGrid count={6} />;
     if (!query && searchResults.length === 0) {
       return (
         <EmptyState
@@ -90,18 +93,17 @@ export default function SearchScreen() {
   const hasActiveFilters = Object.keys(filters).length > 0;
 
   return (
-    <View style={styles.container}>
-      {/* Search Bar */}
+    <ScreenContainer noPadding>
       <View style={styles.searchBar}>
         <View style={styles.searchInputWrapper}>
-          <Ionicons name="search-outline" size={20} color={colors.textTertiary} />
-          <TextInput
+          <TextInputField
             placeholder={t('search.placeholder')}
             value={query}
             onChangeText={setQuery}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
-            style={styles.searchInput}
+            iconLeft={<Ionicons name="search-outline" size={20} color={colors.textTertiary} />}
+            inputStyle={styles.searchInput}
           />
         </View>
         <TouchableOpacity
@@ -177,24 +179,24 @@ export default function SearchScreen() {
             {/* Price Range */}
             <Text style={styles.filterLabel}>{t('search.filter.price_range')}</Text>
             <View style={styles.priceRow}>
-              <TextInput
+              <TextInputField
                 placeholder={t('search.filter.min_price')}
                 value={tempFilters.min_price?.toString() ?? ''}
                 onChangeText={(v) =>
                   setTempFilters({ ...tempFilters, min_price: v ? Number(v) : undefined })
                 }
                 keyboardType="numeric"
-                style={styles.priceInput}
+                inputStyle={styles.priceInput}
               />
               <Text style={styles.priceDash}>-</Text>
-              <TextInput
+              <TextInputField
                 placeholder={t('search.filter.max_price')}
                 value={tempFilters.max_price?.toString() ?? ''}
                 onChangeText={(v) =>
                   setTempFilters({ ...tempFilters, max_price: v ? Number(v) : undefined })
                 }
                 keyboardType="numeric"
-                style={styles.priceInput}
+                inputStyle={styles.priceInput}
               />
             </View>
 
@@ -254,21 +256,20 @@ export default function SearchScreen() {
           </ScrollView>
 
           <View style={styles.modalActions}>
-            <Button
-              title={t('search.filter.clear')}
+            <SecondaryButton
+              label={t('search.filter.clear')}
               onPress={handleClearFilters}
-              variant="outline"
               style={styles.modalButton}
             />
-            <Button
-              title={t('search.filter.apply')}
+            <GradientButton
+              label={t('search.filter.apply')}
               onPress={handleApplyFilters}
               style={styles.modalButton}
             />
           </View>
         </SafeAreaView>
       </Modal>
-    </View>
+    </ScreenContainer>
   );
 }
 

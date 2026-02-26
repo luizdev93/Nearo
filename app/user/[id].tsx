@@ -10,6 +10,7 @@ import { useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, typography } from '../../src/theme';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
 import { Avatar } from '../../src/components/common/Avatar';
 import { LoadingScreen } from '../../src/components/common/LoadingScreen';
 import { ListingCardComponent } from '../../src/components/cards/ListingCard';
@@ -48,7 +49,8 @@ export default function PublicUserProfileScreen() {
   return (
     <>
       <Stack.Screen options={{ title: profile.name || 'User' }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScreenContainer noPadding>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.header}>
           <Avatar uri={profile.avatar_url} name={profile.name} size={80} />
@@ -81,7 +83,8 @@ export default function PublicUserProfileScreen() {
         ) : (
           <Text style={styles.emptyText}>{t('profile.no_listings')}</Text>
         )}
-      </ScrollView>
+        </ScrollView>
+      </ScreenContainer>
     </>
   );
 }

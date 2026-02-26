@@ -1,7 +1,8 @@
 import { Stack, useRouter } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
+import { ScreenContainer } from '../src/components/layout/ScreenContainer';
 import { EmptyState } from '../src/components/common/EmptyState';
-import { Button } from '../src/components/common/Button';
+import { GradientButton } from '../src/components/ui/GradientButton';
 import { colors, spacing } from '../src/theme';
 
 export default function NotFoundScreen() {
@@ -10,18 +11,20 @@ export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Not Found' }} />
-      <View style={styles.container}>
-        <EmptyState
-          icon="alert-circle-outline"
-          title="Page not found"
-          subtitle="The page you're looking for doesn't exist."
-        />
-        <Button
-          title="Go Home"
-          onPress={() => router.replace('/(tabs)')}
-          style={styles.button}
-        />
-      </View>
+      <ScreenContainer>
+        <View style={styles.container}>
+          <EmptyState
+            icon="alert-circle-outline"
+            title="Page not found"
+            subtitle="The page you're looking for doesn't exist."
+          />
+          <GradientButton
+            label="Go Home"
+            onPress={() => router.replace('/(tabs)')}
+            fullWidth
+          />
+        </View>
+      </ScreenContainer>
     </>
   );
 }
@@ -29,11 +32,7 @@ export default function NotFoundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing['2xl'],
     justifyContent: 'center',
-  },
-  button: {
-    marginTop: spacing.xl,
+    gap: spacing.xl,
   },
 });

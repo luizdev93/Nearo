@@ -11,8 +11,9 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../../src/theme';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
 import { Avatar } from '../../src/components/common/Avatar';
-import { Button } from '../../src/components/common/Button';
+import { GradientButton } from '../../src/components/ui/GradientButton';
 import { ListingCardComponent } from '../../src/components/cards/ListingCard';
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { useAuthStore } from '../../src/state/auth_store';
@@ -33,21 +34,25 @@ export default function ProfileScreen() {
 
   if (!session || !user) {
     return (
-      <View style={styles.authPrompt}>
-        <EmptyState
-          icon="person-outline"
-          title={t('profile.login_required')}
-        />
-        <Button
-          title={t('auth.login.continue')}
-          onPress={() => router.push('/(auth)/login')}
-        />
-      </View>
+      <ScreenContainer>
+        <View style={styles.authPrompt}>
+          <EmptyState
+            icon="person-outline"
+            title={t('profile.login_required')}
+          />
+          <GradientButton
+            label={t('auth.login.continue')}
+            onPress={() => router.push('/(auth)/login')}
+            fullWidth
+          />
+        </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScreenContainer noPadding>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Profile Header */}
       <View style={styles.header}>
         <Avatar uri={user.avatar_url} name={user.name} size={80} />
@@ -107,6 +112,7 @@ export default function ProfileScreen() {
         <Text style={styles.emptyText}>{t('profile.no_listings')}</Text>
       )}
     </ScrollView>
+    </ScreenContainer>
   );
 }
 

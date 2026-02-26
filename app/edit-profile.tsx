@@ -11,9 +11,10 @@ import { useRouter, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '../src/localization/i18n';
 import { colors, spacing, borderRadius, typography } from '../src/theme';
+import { ScreenContainer } from '../src/components/layout/ScreenContainer';
 import { Avatar } from '../src/components/common/Avatar';
-import { Button } from '../src/components/common/Button';
-import { TextInput } from '../src/components/inputs/TextInput';
+import { GradientButton } from '../src/components/ui/GradientButton';
+import { TextInputField } from '../src/components/form/TextInputField';
 import { useAuthStore } from '../src/state/auth_store';
 import { useUserStore } from '../src/state/user_store';
 import { storageService } from '../src/services/storage_service';
@@ -66,28 +67,27 @@ export default function EditProfileScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t('edit_profile.title') }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {/* Avatar */}
-        <View style={styles.avatarSection}>
-          <Avatar uri={avatarUrl} name={name} size={100} />
-          <TouchableOpacity
-            onPress={handleChangePhoto}
-            disabled={isUploadingPhoto}
-          >
-            <Text style={[styles.changePhotoText, isUploadingPhoto && styles.changePhotoDisabled]}>
-              {isUploadingPhoto ? t('edit_profile.uploading_photo') : t('edit_profile.change_photo')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <ScreenContainer noPadding>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+          <View style={styles.avatarSection}>
+            <Avatar uri={avatarUrl} name={name} size={100} />
+            <TouchableOpacity
+              onPress={handleChangePhoto}
+              disabled={isUploadingPhoto}
+            >
+              <Text style={[styles.changePhotoText, isUploadingPhoto && styles.changePhotoDisabled]}>
+                {isUploadingPhoto ? t('edit_profile.uploading_photo') : t('edit_profile.change_photo')}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Name */}
-        <TextInput
-          label={t('edit_profile.name')}
-          placeholder={t('edit_profile.name_placeholder')}
-          value={name}
-          onChangeText={setName}
-          error={error}
-        />
+          <TextInputField
+            label={t('edit_profile.name')}
+            placeholder={t('edit_profile.name_placeholder')}
+            value={name}
+            onChangeText={setName}
+            error={error ?? undefined}
+          />
 
         {/* Language */}
         <Text style={styles.label}>{t('edit_profile.language')}</Text>
@@ -110,16 +110,16 @@ export default function EditProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Save */}
-        <Button
-          title={isLoading ? t('edit_profile.saving') : t('edit_profile.save')}
-          onPress={handleSave}
-          loading={isLoading}
-          disabled={!name.trim()}
-          size="lg"
-          style={styles.saveButton}
-        />
-      </ScrollView>
+          <GradientButton
+            label={isLoading ? t('edit_profile.saving') : t('edit_profile.save')}
+            onPress={handleSave}
+            loading={isLoading}
+            disabled={!name.trim()}
+            fullWidth
+            style={styles.saveButton}
+          />
+        </ScrollView>
+      </ScreenContainer>
     </>
   );
 }

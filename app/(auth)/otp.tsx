@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, typography } from '../../src/theme';
-import { Button } from '../../src/components/common/Button';
-import { TextInput } from '../../src/components/inputs/TextInput';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { TextInputField } from '../../src/components/form/TextInputField';
 import { useAuthStore } from '../../src/state/auth_store';
 import { isValidOTP } from '../../src/utils/validators';
 
@@ -55,7 +55,7 @@ export default function OTPScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <ScreenContainer>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -68,7 +68,7 @@ export default function OTPScreen() {
         </View>
 
         <View style={styles.form}>
-          <TextInput
+          <TextInputField
             placeholder="000000"
             value={code}
             onChangeText={setCode}
@@ -76,15 +76,15 @@ export default function OTPScreen() {
             maxLength={6}
             autoFocus
             error={codeError || error || undefined}
-            style={styles.otpInput}
+            inputStyle={styles.otpInput}
           />
 
-          <Button
-            title={t('auth.otp.verify')}
+          <GradientButton
+            label={t('auth.otp.verify')}
             onPress={handleVerify}
             loading={isLoading}
             disabled={code.length < 6}
-            size="lg"
+            fullWidth
           />
 
           <TouchableOpacity
@@ -100,18 +100,13 @@ export default function OTPScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   container: {
     flex: 1,
-    padding: spacing['2xl'],
     justifyContent: 'center',
   },
   header: {
@@ -130,7 +125,7 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: spacing.xl,
-    alignItems: 'center',
+    alignItems: 'stretch',
   },
   otpInput: {
     textAlign: 'center',

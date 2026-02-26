@@ -9,13 +9,13 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../../src/theme';
-import { Button } from '../../src/components/common/Button';
-import { TextInput } from '../../src/components/inputs/TextInput';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { TextInputField } from '../../src/components/form/TextInputField';
 import { useAuthStore } from '../../src/state/auth_store';
 import { useListingStore } from '../../src/state/listing_store';
 import { pickImages } from '../../src/utils/image';
@@ -49,15 +49,16 @@ export default function CreateListingScreen() {
 
   if (!session) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <ScreenContainer>
         <View style={styles.authPrompt}>
           <Text style={styles.authText}>{t('profile.login_required')}</Text>
-          <Button
-            title={t('auth.login.continue')}
+          <GradientButton
+            label={t('auth.login.continue')}
             onPress={() => router.push('/(auth)/login')}
+            fullWidth
           />
         </View>
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
@@ -114,9 +115,8 @@ export default function CreateListingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <ScreenContainer noPadding>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {/* Images */}
         <Text style={styles.sectionLabel}>{t('listing.create.field_images')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageRow}>
           {images.map((uri, index) => (
@@ -139,8 +139,7 @@ export default function CreateListingScreen() {
         </ScrollView>
         {errors.images && <Text style={styles.errorText}>{errors.images}</Text>}
 
-        {/* Title */}
-        <TextInput
+        <TextInputField
           label={t('listing.create.field_title')}
           placeholder={t('listing.create.field_title_placeholder')}
           value={title}
@@ -148,20 +147,18 @@ export default function CreateListingScreen() {
           error={errors.title}
         />
 
-        {/* Description */}
-        <TextInput
+        <TextInputField
           label={t('listing.create.field_description')}
           placeholder={t('listing.create.field_description_placeholder')}
           value={description}
           onChangeText={setDescription}
           multiline
           numberOfLines={4}
-          style={styles.textArea}
+          inputStyle={styles.textArea}
           error={errors.description}
         />
 
-        {/* Price */}
-        <TextInput
+        <TextInputField
           label={t('listing.create.field_price')}
           placeholder={t('listing.create.field_price_placeholder')}
           value={price}
@@ -241,24 +238,19 @@ export default function CreateListingScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* Publish */}
-        <Button
-          title={isCreating ? t('listing.create.publishing') : t('listing.create.publish')}
+        <GradientButton
+          label={isCreating ? t('listing.create.publishing') : t('listing.create.publish')}
           onPress={handlePublish}
           loading={isCreating}
-          size="lg"
+          fullWidth
           style={styles.publishButton}
         />
       </ScrollView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   scroll: {
     flex: 1,
   },

@@ -8,8 +8,9 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, typography } from '../../src/theme';
-import { Button } from '../../src/components/common/Button';
+import { colors, spacing, typography } from '../../src/theme';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { GradientButton } from '../../src/components/ui/GradientButton';
 import { LoadingScreen } from '../../src/components/common/LoadingScreen';
 import { useListingStore } from '../../src/state/listing_store';
 
@@ -42,12 +43,14 @@ export default function PromoteListingScreen() {
     return (
       <>
         <Stack.Screen options={{ title: t('listing.promote.title') }} />
-        <View style={styles.container}>
-          <Ionicons name="star" size={48} color={colors.featured} />
-          <Text style={styles.alreadyFeatured}>
-            {t('listing.promote.already_featured')}
-          </Text>
-        </View>
+        <ScreenContainer>
+          <View style={styles.container}>
+            <Ionicons name="star" size={48} color={colors.featured} />
+            <Text style={styles.alreadyFeatured}>
+              {t('listing.promote.already_featured')}
+            </Text>
+          </View>
+        </ScreenContainer>
       </>
     );
   }
@@ -55,20 +58,22 @@ export default function PromoteListingScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t('listing.promote.title') }} />
-      <View style={styles.container}>
-        <Ionicons name="rocket-outline" size={64} color={colors.primary} />
-        <Text style={styles.title}>{t('listing.promote.title')}</Text>
-        <Text style={styles.listingTitle}>{currentListing.title}</Text>
-        <Text style={styles.description}>{t('listing.promote.description')}</Text>
+      <ScreenContainer>
+        <View style={styles.container}>
+          <Ionicons name="rocket-outline" size={64} color={colors.primary} />
+          <Text style={styles.title}>{t('listing.promote.title')}</Text>
+          <Text style={styles.listingTitle}>{currentListing.title}</Text>
+          <Text style={styles.description}>{t('listing.promote.description')}</Text>
 
-        <Button
-          title={t('listing.promote.promote_button')}
-          onPress={handlePromote}
-          loading={isPromoting}
-          size="lg"
-          style={styles.button}
-        />
-      </View>
+          <GradientButton
+            label={t('listing.promote.promote_button')}
+            onPress={handlePromote}
+            loading={isPromoting}
+            fullWidth
+            style={styles.button}
+          />
+        </View>
+      </ScreenContainer>
     </>
   );
 }
@@ -76,10 +81,8 @@ export default function PromoteListingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing['2xl'],
     gap: spacing.lg,
   },
   title: {

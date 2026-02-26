@@ -8,11 +8,12 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, typography } from '../../src/theme';
-import { Button } from '../../src/components/common/Button';
-import { TextInput } from '../../src/components/inputs/TextInput';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { SecondaryButton } from '../../src/components/ui/SecondaryButton';
+import { TextInputField } from '../../src/components/form/TextInputField';
 import { useAuthStore } from '../../src/state/auth_store';
 import { isValidPhone } from '../../src/utils/validators';
 
@@ -58,7 +59,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <ScreenContainer>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -69,7 +70,7 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
-          <TextInput
+          <TextInputField
             label={t('auth.login.phone_placeholder')}
             placeholder="+1 234 567 8900"
             value={phone}
@@ -79,12 +80,12 @@ export default function LoginScreen() {
             error={phoneError || error || undefined}
           />
 
-          <Button
-            title={t('auth.login.continue')}
+          <GradientButton
+            label={t('auth.login.continue')}
             onPress={handleContinue}
             loading={isLoading}
             disabled={!phone.trim()}
-            size="lg"
+            fullWidth
           />
 
           <View style={styles.separator}>
@@ -93,12 +94,10 @@ export default function LoginScreen() {
             <View style={styles.separatorLine} />
           </View>
 
-          <Button
-            title={t('auth.login.sign_in_with_google')}
+          <SecondaryButton
+            label={t('auth.login.sign_in_with_google')}
             onPress={handleGoogleSignIn}
-            loading={isLoading}
-            variant="outline"
-            size="lg"
+            fullWidth
           />
 
           <TouchableOpacity
@@ -112,18 +111,13 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   container: {
     flex: 1,
-    padding: spacing['2xl'],
     justifyContent: 'center',
   },
   header: {

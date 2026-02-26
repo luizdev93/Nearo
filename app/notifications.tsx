@@ -10,6 +10,7 @@ import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../src/theme';
+import { ScreenContainer } from '../src/components/layout/ScreenContainer';
 import { EmptyState } from '../src/components/common/EmptyState';
 import { LoadingScreen } from '../src/components/common/LoadingScreen';
 import { useAuthStore } from '../src/state/auth_store';
@@ -93,16 +94,18 @@ export default function NotificationsScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t('notifications.title') }} />
-      <FlatList
-        data={notifications}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <EmptyState icon="notifications-outline" title={t('notifications.empty')} />
-        }
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      <ScreenContainer noPadding>
+        <FlatList
+          data={notifications}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <EmptyState icon="notifications-outline" title={t('notifications.empty')} />
+          }
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+        />
+      </ScreenContainer>
     </>
   );
 }
@@ -124,7 +127,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: borderRadius.bubble,
     backgroundColor: colors.backgroundSecondary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -147,7 +150,7 @@ const styles = StyleSheet.create({
   unreadDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: borderRadius.sm,
     backgroundColor: colors.primary,
   },
   separator: {

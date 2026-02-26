@@ -1,23 +1,16 @@
 import React, { useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, borderRadius, typography } from '../../src/theme';
-import { Avatar } from '../../src/components/common/Avatar';
+import { colors, spacing, typography } from '../../src/theme';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { ConversationItem } from '../../src/components/chat/ConversationItem';
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { useAuthStore } from '../../src/state/auth_store';
 import { useChatStore } from '../../src/state/chat_store';
 import { ChatPreview } from '../../src/models/chat';
 import { formatChatTimestamp } from '../../src/utils/formatters';
-import { Button } from '../../src/components/common/Button';
 
 export default function ChatsScreen() {
   const { t } = useTranslation();
@@ -36,51 +29,30 @@ export default function ChatsScreen() {
 
   if (!session) {
     return (
-      <View style={styles.authPrompt}>
-        <Text style={styles.authText}>{t('profile.login_required')}</Text>
-        <Button
-          title={t('auth.login.continue')}
-          onPress={() => router.push('/(auth)/login')}
-        />
-      </View>
+      <ScreenContainer>
+        <View style={styles.authPrompt}>
+          <Text style={styles.authText}>{t('profile.login_required')}</Text>
+          <GradientButton
+            label={t('auth.login.continue')}
+            onPress={() => router.push('/(auth)/login')}
+            fullWidth
+          />
+        </View>
+      </ScreenContainer>
     );
   }
 
   const renderItem = ({ item }: { item: ChatPreview }) => (
-    <TouchableOpacity
-      style={styles.chatItem}
+    <ConversationItem
+      avatar={item.other_user.avatar_url}
+      name={item.other_user.name ?? 'User'}
+      lastMessage={item.last_message ?? undefined}
+      time={item.last_message_at ? formatChatTimestamp(item.last_message_at) : undefined}
+      unreadCount={0}
       onPress={() => router.push(`/chat/${item.id}`)}
-      activeOpacity={0.7}
-    >
-      <Avatar uri={item.other_user.avatar_url} name={item.other_user.name} size={48} />
-      <View style={styles.chatInfo}>
-        <View style={styles.chatHeader}>
-          <Text style={styles.chatName} numberOfLines={1}>
-            {item.other_user.name || 'User'}
-          </Text>
-          {item.last_message_at && (
-            <Text style={styles.chatTime}>
-              {formatChatTimestamp(item.last_message_at)}
-            </Text>
-          )}
-        </View>
-        <Text style={styles.chatListing} numberOfLines={1}>
-          {item.listing_title}
-        </Text>
-        {item.last_message && (
-          <Text style={styles.chatLastMessage} numberOfLines={1}>
-            {item.last_message}
-          </Text>
-        )}
-      </View>
-      {item.listing_image_url && (
-        <Image
-          source={{ uri: item.listing_image_url }}
-          style={styles.chatListingImage}
-          contentFit="cover"
-        />
-      )}
-    </TouchableOpacity>
+      listingTitle={item.listing_title}
+      listingImageUrl={item.listing_image_url}
+    />
   );
 
   const renderEmpty = () => {
@@ -91,17 +63,19 @@ export default function ChatsScreen() {
   };
 
   return (
-    <FlatList
-      data={chats}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={styles.list}
-      ListEmptyComponent={renderEmpty}
-      refreshControl={
-        <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
-      }
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-    />
+    <ScreenContainer noPadding>
+      <FlatList
+        data={chats}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={renderEmpty}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
+        }
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
+    </ScreenContainer>
   );
 }
 
@@ -112,54 +86,13 @@ const styles = StyleSheet.create({
   authPrompt: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing['2xl'],
+    alignItems: 'stretch',
     gap: spacing.lg,
-    backgroundColor: colors.background,
   },
   authText: {
     ...typography.body,
     color: colors.textSecondary,
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    gap: spacing.md,
-    backgroundColor: colors.background,
-  },
-  chatInfo: {
-    flex: 1,
-  },
-  chatHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  chatName: {
-    ...typography.label,
-    color: colors.text,
-    flex: 1,
-  },
-  chatTime: {
-    ...typography.caption,
-    color: colors.textTertiary,
-    marginLeft: spacing.sm,
-  },
-  chatListing: {
-    ...typography.caption,
-    color: colors.primary,
-    marginTop: 2,
-  },
-  chatLastMessage: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  chatListingImage: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.md,
+    textAlign: 'center',
   },
   separator: {
     height: 1,

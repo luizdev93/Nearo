@@ -10,7 +10,8 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../../src/theme';
-import { Button } from '../../src/components/common/Button';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { GradientButton } from '../../src/components/ui/GradientButton';
 import { useAuthStore } from '../../src/state/auth_store';
 import { reportService } from '../../src/services/report_service';
 import { ReportReason } from '../../src/models/report';
@@ -45,7 +46,7 @@ export default function ReportScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t('report.title') }} />
-      <View style={styles.container}>
+      <ScreenContainer>
         <Text style={styles.title}>{t('report.title')}</Text>
 
         <View style={styles.reasons}>
@@ -79,25 +80,20 @@ export default function ReportScreen() {
           ))}
         </View>
 
-        <Button
-          title={t('report.submit')}
+        <GradientButton
+          label={t('report.submit')}
           onPress={handleSubmit}
           loading={isSubmitting}
           disabled={!selectedReason}
-          size="lg"
+          fullWidth
           style={styles.submitButton}
         />
-      </View>
+      </ScreenContainer>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing['2xl'],
-  },
   title: {
     ...typography.h2,
     color: colors.text,
@@ -128,6 +124,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   submitButton: {
-    marginTop: spacing['3xl'],
+    marginTop: spacing.xl,
   },
 });

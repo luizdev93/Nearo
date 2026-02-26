@@ -1,20 +1,16 @@
 import React, { useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../../src/theme';
-import { Button } from '../../src/components/common/Button';
+import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { SecondaryButton } from '../../src/components/ui/SecondaryButton';
+import { IconButton } from '../../src/components/ui/IconButton';
 import { Badge } from '../../src/components/common/Badge';
-import { PriceLabel } from '../../src/components/common/PriceLabel';
+import { PriceTag } from '../../src/components/listings/PriceTag';
+import { ListingImageCarousel } from '../../src/components/listings/ListingImageCarousel';
 import { UserCard } from '../../src/components/cards/UserCard';
 import { LoadingScreen } from '../../src/components/common/LoadingScreen';
 import { ErrorView } from '../../src/components/common/ErrorView';
@@ -22,8 +18,6 @@ import { useListingStore } from '../../src/state/listing_store';
 import { useAuthStore } from '../../src/state/auth_store';
 import { useUserStore } from '../../src/state/user_store';
 import { useChatStore } from '../../src/state/chat_store';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function ListingDetailScreen() {
   const { t } = useTranslation();
@@ -66,48 +60,27 @@ export default function ListingDetailScreen() {
   const listing = currentListing;
   const isOwner = user?.id === listing.owner_id;
 
+  const imageUrls = listing.images.map((img) => img.url);
+
   return (
     <>
       <Stack.Screen options={{ title: listing.title }} />
-      <ScrollView style={styles.container}>
-        {/* Image Gallery */}
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          style={styles.imageGallery}
-        >
-          {listing.images.length > 0 ? (
-            listing.images.map((img) => (
-              <Image
-                key={img.id}
-                source={{ uri: img.url }}
-                style={styles.galleryImage}
-                contentFit="cover"
-                transition={200}
-              />
-            ))
-          ) : (
-            <View style={[styles.galleryImage, styles.imagePlaceholder]}>
-              <Ionicons name="image-outline" size={48} color={colors.textTertiary} />
+      <ScreenContainer noPadding>
+        <ScrollView style={styles.container}>
+          <ListingImageCarousel images={imageUrls} />
+
+          <View style={styles.details}>
+            <View style={styles.badgeRow}>
+              {listing.is_featured && (
+                <Badge label={t('listing.detail.featured_badge')} variant="featured" />
+              )}
+              {listing.status === 'sold' && (
+                <Badge label={t('listing.detail.sold')} variant="sold" />
+              )}
             </View>
-          )}
-        </ScrollView>
 
-        <View style={styles.details}>
-          {/* Badges */}
-          <View style={styles.badgeRow}>
-            {listing.is_featured && (
-              <Badge label={t('listing.detail.featured_badge')} variant="featured" />
-            )}
-            {listing.status === 'sold' && (
-              <Badge label={t('listing.detail.sold')} variant="sold" />
-            )}
-          </View>
-
-          {/* Price + Title */}
-          <PriceLabel price={listing.price} size="lg" />
-          <Text style={styles.title}>{listing.title}</Text>
+            <PriceTag price={listing.price} />
+            <Text style={styles.title}>{listing.title}</Text>
 
           {/* Meta */}
           <View style={styles.metaRow}>
@@ -144,41 +117,45 @@ export default function ListingDetailScreen() {
             onPress={() => router.push(`/user/${listing.owner_id}`)}
           />
 
-          {/* Actions */}
           {!isOwner && listing.status === 'active' && (
             <View style={styles.actions}>
-              <Button
-                title={t('listing.detail.chat_seller')}
+              <GradientButton
+                label={t('listing.detail.chat_seller')}
                 onPress={handleChatSeller}
-                size="lg"
                 style={styles.chatButton}
+                fullWidth
               />
-              <TouchableOpacity style={styles.iconAction} onPress={handleFavorite}>
-                <Ionicons
-                  name={isFavorited ? 'heart' : 'heart-outline'}
-                  size={24}
-                  color={isFavorited ? colors.error : colors.textSecondary}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.iconAction}
+              <IconButton
+                icon={
+                  <Ionicons
+                    name={isFavorited ? 'heart' : 'heart-outline'}
+                    size={24}
+                    color={isFavorited ? colors.error : colors.textSecondary}
+                  />
+                }
+                onPress={handleFavorite}
+                size={48}
+              />
+              <IconButton
+                icon={
+                  <Ionicons name="flag-outline" size={24} color={colors.textSecondary} />
+                }
                 onPress={() => router.push(`/report/${listing.id}`)}
-              >
-                <Ionicons name="flag-outline" size={24} color={colors.textSecondary} />
-              </TouchableOpacity>
+                size={48}
+              />
             </View>
           )}
 
           {isOwner && listing.status === 'active' && !listing.is_featured && (
-            <Button
-              title={t('listing.promote.promote_button')}
+            <SecondaryButton
+              label={t('listing.promote.promote_button')}
               onPress={() => router.push(`/promote/${listing.id}`)}
-              variant="secondary"
-              size="lg"
+              fullWidth
             />
           )}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </ScreenContainer>
     </>
   );
 }
@@ -187,19 +164,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  imageGallery: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 0.75,
-  },
-  galleryImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 0.75,
-  },
-  imagePlaceholder: {
-    backgroundColor: colors.backgroundSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   details: {
     padding: spacing.lg,
@@ -254,13 +218,5 @@ const styles = StyleSheet.create({
   },
   chatButton: {
     flex: 1,
-  },
-  iconAction: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surfaceSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

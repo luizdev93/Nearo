@@ -1,3 +1,4 @@
-export { colors } from './colors';
+export { colors, gradientPrimary } from './colors';
 export { spacing, borderRadius } from './spacing';
 export { typography } from './typography';
+export { shadows } from './shadows';
