@@ -61,8 +61,14 @@ export const useListingStore = create<ListingState>((set, get) => ({
     if (error) {
       set({ isLoading: false, error });
     } else if (data) {
+      const seen = new Set<string>();
+      const items = data.items.filter((l) => {
+        if (seen.has(l.id)) return false;
+        seen.add(l.id);
+        return true;
+      });
       set({
-        feedListings: data.items,
+        feedListings: items,
         feedCursor: data.cursor,
         feedHasMore: data.hasMore,
         isLoading: false,
@@ -77,8 +83,14 @@ export const useListingStore = create<ListingState>((set, get) => ({
     set({ isLoadingMore: true });
     const { data } = await listingService.getRecentListings(feedCursor);
     if (data) {
+      const existingIds = new Set(get().feedListings.map((l) => l.id));
+      const newItems = data.items.filter((l) => {
+        if (existingIds.has(l.id)) return false;
+        existingIds.add(l.id);
+        return true;
+      });
       set((state) => ({
-        feedListings: [...state.feedListings, ...data.items],
+        feedListings: [...state.feedListings, ...newItems],
         feedCursor: data.cursor,
         feedHasMore: data.hasMore,
         isLoadingMore: false,

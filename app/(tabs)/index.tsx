@@ -86,7 +86,7 @@ export default function HomeScreen() {
           <FlatList
             data={featuredListings}
             renderItem={renderFeaturedItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => `featured-${item.id}`}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.featuredList}

@@ -3,6 +3,11 @@ App name: Nearo
 Project: Local Marketplace App
 Platforms: Mobile (iOS + Android)
 Languages: English (default) + Vietnamese
+
+All UI generation MUST follow:
+- Nearo Design System & UX Guidelines
+- Nearo UI Rules for Cursor
+
 1. GLOBAL APP RULES
 1.1 App Purpose
 
