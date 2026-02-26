@@ -16,6 +16,7 @@ import type {
 } from '../../models/category_engine';
 import type { CreateListingAttributeValues } from '../../models/listing';
 import type { ListingCondition } from '../../models/listing';
+import { formatVndInput } from '../../utils/vnd';
 
 function getLabel(attr: CategoryTemplateAttribute, locale: 'en' | 'vi' = 'en'): string {
   const label = locale === 'vi' ? attr.label_vi : attr.label_en;
@@ -99,9 +100,9 @@ export function DynamicListingForm({
       />
       <TextInputField
         label="Price"
-        placeholder="0"
+        placeholder="0 ₫"
         value={price}
-        onChangeText={onPriceChange}
+        onChangeText={(t) => onPriceChange(formatVndInput(t))}
         keyboardType="numeric"
         error={errors.price}
       />

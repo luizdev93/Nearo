@@ -2,12 +2,17 @@ import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Dimensions } from 'react-native';
 import { colors, spacing, borderRadius } from '../../theme';
 
-const CARD_WIDTH = (Dimensions.get('window').width - spacing.lg * 3) / 2;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const HORIZONTAL_PADDING = spacing.lg * 2;
+const CARD_WIDTH_2COL = (SCREEN_WIDTH - spacing.lg * 3) / 2;
+const CARD_WIDTH_1COL = SCREEN_WIDTH - HORIZONTAL_PADDING;
 
 type SkeletonVariant = 'card' | 'list' | 'avatar';
 
 interface LoadingSkeletonProps {
   variant: SkeletonVariant;
+  /** Full width for single column layout */
+  fullWidth?: boolean;
 }
 
 function usePulse() {
@@ -34,13 +39,15 @@ function usePulse() {
 }
 
 /** Placeholder loading — card (grid), list row, or avatar. */
-export function LoadingSkeleton({ variant }: LoadingSkeletonProps) {
+export function LoadingSkeleton({ variant, fullWidth }: LoadingSkeletonProps) {
   const pulse = usePulse();
 
   if (variant === 'card') {
+    const cardWidth = fullWidth ? CARD_WIDTH_1COL : CARD_WIDTH_2COL;
+    const aspectRatio = fullWidth ? 4 / 3 : 1;
     return (
-      <Animated.View style={[styles.card, { opacity: pulse }]}>
-        <View style={styles.cardImage} />
+      <Animated.View style={[styles.card, { opacity: pulse, width: cardWidth }]}>
+        <View style={[styles.cardImage, { aspectRatio }]} />
         <View style={styles.cardInfo}>
           <View style={styles.lineShort} />
           <View style={styles.lineLong} />
@@ -74,19 +81,18 @@ export function LoadingSkeleton({ variant }: LoadingSkeletonProps) {
 }
 
 /** Grid of card skeletons (e.g. for feed). */
-export function LoadingSkeletonGrid({ count = 4 }: { count?: number }) {
+export function LoadingSkeletonGrid({ count = 4, fullWidth }: { count?: number; fullWidth?: boolean }) {
   return (
-    <View style={styles.grid}>
+    <View style={[styles.grid, fullWidth && styles.gridSingle]}>
       {Array.from({ length: count }).map((_, i) => (
-        <LoadingSkeleton key={i} variant="card" />
+        <LoadingSkeleton key={i} variant="card" fullWidth={fullWidth} />
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    width: CARD_WIDTH,
+  card: {},
     borderRadius: borderRadius.card,
     overflow: 'hidden',
     marginBottom: spacing.md,
@@ -94,7 +100,6 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: '100%',
-    height: CARD_WIDTH,
     backgroundColor: colors.backgroundSecondary,
   },
   cardInfo: {
@@ -124,6 +129,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     padding: spacing.lg,
+  },
+  gridSingle: {
+    flexDirection: 'column',
   },
   listRow: {
     flexDirection: 'row',

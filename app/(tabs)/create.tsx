@@ -18,7 +18,7 @@ import { GradientButton } from '../../src/components/ui/GradientButton';
 import { useAuthStore } from '../../src/state/auth_store';
 import { useListingStore } from '../../src/state/listing_store';
 import { pickImages } from '../../src/utils/image';
-import { getCurrentLocation } from '../../src/utils/location';
+import { LocationPickerModal } from '../../src/components/location/LocationPickerModal';
 import { CreateListingInput, ListingCondition, CreateListingAttributeValues } from '../../src/models/listing';
 import { LISTING_IMAGE_MAX_COUNT } from '../../src/utils/constants';
 import {
@@ -26,11 +26,13 @@ import {
   isValidListingDescription,
   isValidPrice,
 } from '../../src/utils/validators';
+import { parseVnd, formatVndInput } from '../../src/utils/vnd';
 import { categoryService } from '../../src/services/category_service';
 import type { Category } from '../../src/models/category_engine';
 import type { CategoryTemplate } from '../../src/models/category_engine';
 import { CategoryTreePicker } from '../../src/components/category/CategoryTreePicker';
 import { DynamicListingForm } from '../../src/components/category/DynamicListingForm';
+import { CATEGORIES, CATEGORY_ICONS } from '../../src/models/category';
 
 export default function CreateListingScreen() {
   const { t, i18n } = useTranslation();
@@ -51,16 +53,37 @@ export default function CreateListingScreen() {
   const [images, setImages] = useState<string[]>([]);
   const [locationName, setLocationName] = useState('');
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     categoryService.getLeafCategories().then(({ data }) => {
-      if (data) setLeafCategories(data);
+      if (data && data.length > 0) {
+        setLeafCategories(data);
+      } else {
+        setLeafCategories(
+          CATEGORIES.map((slug, i) => ({
+            id: `fallback-${slug}`,
+            parent_id: null,
+            name: t(`categories.${slug}`),
+            slug,
+            icon: CATEGORY_ICONS[slug] ?? 'ellipsis-horizontal',
+            sort_order: i + 1,
+            created_at: '',
+            updated_at: '',
+          })),
+        );
+      }
     });
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!selectedCategory) {
+      setTemplate(null);
+      setAttributeValues({});
+      return;
+    }
+    if (selectedCategory.id.startsWith('fallback-')) {
       setTemplate(null);
       setAttributeValues({});
       return;
@@ -97,19 +120,11 @@ export default function CreateListingScreen() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleDetectLocation = async () => {
-    const coords = await getCurrentLocation();
-    if (coords) {
-      setLocationCoords({ lat: coords.latitude, lng: coords.longitude });
-      setLocationName(`${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`);
-    }
-  };
-
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!isValidListingTitle(title)) newErrors.title = 'Title must be 3-100 characters';
     if (!isValidListingDescription(description)) newErrors.description = 'Description must be 10-2000 characters';
-    if (!isValidPrice(Number(price))) newErrors.price = 'Enter a valid price';
+    if (!isValidPrice(parseVnd(price))) newErrors.price = 'Enter a valid price';
     if (!selectedCategory) newErrors.category = 'Select a category';
     if (images.length === 0) newErrors.images = 'Add at least one photo';
     setErrors(newErrors);
@@ -126,9 +141,9 @@ export default function CreateListingScreen() {
     const input: CreateListingInput = {
       title: title.trim(),
       description: description.trim(),
-      price: Number(price),
+      price: parseVnd(price),
       category: selectedCategory.slug,
-      category_id: selectedCategory.id,
+      category_id: selectedCategory.id.startsWith('fallback-') ? undefined : selectedCategory.id,
       condition,
       negotiable,
       location_lat: locationCoords?.lat,
@@ -148,15 +163,15 @@ export default function CreateListingScreen() {
     <ScreenContainer noPadding>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Text style={styles.sectionLabel}>{t('listing.create.field_images')}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageRow} contentContainerStyle={styles.imageRowContent}>
           {images.map((uri, index) => (
-            <View key={uri} style={styles.imageThumb}>
+            <View key={`${uri}-${index}`} style={styles.imageThumb}>
               <Image source={{ uri }} style={styles.thumbImage} contentFit="cover" />
               <TouchableOpacity
                 style={styles.removeImage}
                 onPress={() => handleRemoveImage(index)}
               >
-                <Ionicons name="close-circle" size={22} color={colors.error} />
+                <Ionicons name="close-circle" size={24} color={colors.error} />
               </TouchableOpacity>
             </View>
           ))}
@@ -197,12 +212,24 @@ export default function CreateListingScreen() {
 
         {/* Location */}
         <Text style={styles.sectionLabel}>{t('listing.create.field_location')}</Text>
-        <TouchableOpacity style={styles.locationButton} onPress={handleDetectLocation}>
-          <Ionicons name="location-outline" size={20} color={colors.primary} />
-          <Text style={styles.locationText}>
+        <TouchableOpacity style={styles.locationButton} onPress={() => setShowLocationPicker(true)}>
+          <Ionicons name="map-outline" size={20} color={colors.primary} />
+          <Text style={styles.locationText} numberOfLines={1}>
             {locationName || t('listing.create.field_location')}
           </Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
         </TouchableOpacity>
+
+        <LocationPickerModal
+          visible={showLocationPicker}
+          onClose={() => setShowLocationPicker(false)}
+          onSelect={(lat, lng, name) => {
+            setLocationCoords({ lat, lng });
+            setLocationName(name ?? `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+          }}
+          initialLat={locationCoords?.lat}
+          initialLng={locationCoords?.lng}
+        />
 
         <GradientButton
           label={isCreating ? t('listing.create.publishing') : t('listing.create.publish')}
@@ -242,6 +269,11 @@ const styles = StyleSheet.create({
   },
   imageRow: {
     flexDirection: 'row',
+    overflow: 'visible',
+  },
+  imageRowContent: {
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   imageThumb: {
     width: 80,
@@ -249,6 +281,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     marginRight: spacing.sm,
     position: 'relative',
+    overflow: 'visible',
   },
   thumbImage: {
     width: 80,
@@ -257,8 +290,11 @@ const styles = StyleSheet.create({
   },
   removeImage: {
     position: 'absolute',
-    top: -6,
-    right: -6,
+    top: -8,
+    right: -8,
+    zIndex: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
   },
   addImageButton: {
     width: 80,

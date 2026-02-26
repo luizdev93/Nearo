@@ -96,7 +96,9 @@
   },
   "search": {
     "title": "Tìm kiếm",
+    "search": "Tìm kiếm",
     "placeholder": "Tìm tin đăng...",
+    "in_category": "Tìm {{query}} trong {{category}}",
     "filters": "Bộ lọc",
     "filter": {
       "category": "Danh mục",

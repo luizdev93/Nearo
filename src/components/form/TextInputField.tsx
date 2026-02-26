@@ -19,6 +19,9 @@ interface TextInputFieldProps extends Omit<RNTextInputProps, 'style'> {
   error?: string;
   label?: string;
   inputStyle?: RNTextInputProps['style'];
+  multiline?: boolean;
+  /** 'large' = 52px min height for better tap targets (e.g. search bar) */
+  size?: 'default' | 'large';
 }
 
 /** Standard input — height 48, radius 12, white background, optional icon and error. */
@@ -31,12 +34,20 @@ export function TextInputField({
   error,
   label,
   inputStyle,
+  multiline,
+  size = 'default',
   ...rest
 }: TextInputFieldProps) {
+  const inputWrapStyle = [
+    styles.inputWrap,
+    size === 'large' && styles.inputWrapLarge,
+    multiline && styles.inputWrapMultiline,
+    error && styles.inputWrapError,
+  ];
   return (
     <View style={styles.container}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.inputWrap, error && styles.inputWrapError]}>
+      <View style={inputWrapStyle}>
         {iconLeft ? <View style={styles.iconLeft}>{iconLeft}</View> : null}
         <RNTextInput
           value={value}
@@ -44,7 +55,13 @@ export function TextInputField({
           placeholder={placeholder}
           placeholderTextColor={colors.textTertiary}
           secureTextEntry={secureTextEntry}
-          style={[styles.input, iconLeft ? styles.inputWithIcon : undefined, inputStyle]}
+          style={[
+            styles.input,
+            iconLeft ? styles.inputWithIcon : undefined,
+            multiline && styles.inputMultiline,
+            inputStyle,
+          ]}
+          multiline={multiline}
           {...rest}
         />
       </View>
@@ -65,11 +82,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: INPUT_HEIGHT,
+    minHeight: INPUT_HEIGHT,
     borderRadius: borderRadius.input,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.lg,
+  },
+  inputWrapLarge: {
+    height: 52,
+    minHeight: 52,
+  },
+  inputWrapMultiline: {
+    height: undefined,
+    minHeight: 100,
+    alignItems: 'flex-start',
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   inputWrapError: {
     borderColor: colors.error,
@@ -82,6 +111,10 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     paddingVertical: 0,
+  },
+  inputMultiline: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   inputWithIcon: {
     paddingLeft: 0,

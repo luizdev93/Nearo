@@ -11,16 +11,22 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../state/auth_store';
 import { useUserStore } from '../../state/user_store';
 
-const CARD_WIDTH = (Dimensions.get('window').width - spacing.lg * 3) / 2;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const HORIZONTAL_PADDING = spacing.lg * 2;
+const CARD_WIDTH_2COL = (SCREEN_WIDTH - spacing.lg * 3) / 2;
+const CARD_WIDTH_1COL = SCREEN_WIDTH - HORIZONTAL_PADDING;
 
 interface ListingCardProps {
   listing: ListingCardType;
   onPress?: () => void;
+  /** Single column layout (full width) — e.g. Search page */
+  fullWidth?: boolean;
 }
 
 export const ListingCardComponent = memo(function ListingCardComponent({
   listing,
   onPress,
+  fullWidth = false,
 }: ListingCardProps) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -44,9 +50,16 @@ export const ListingCardComponent = memo(function ListingCardComponent({
     toggleFavorite(listing.id);
   };
 
+  const cardWidth = fullWidth ? CARD_WIDTH_1COL : CARD_WIDTH_2COL;
+  const containerStyle = [styles.container, { width: cardWidth }];
+  const imageContainerStyle = [
+    styles.imageContainer,
+    { aspectRatio: fullWidth ? 4 / 3 : 1 },
+  ];
+
   return (
-    <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.8}>
-      <View style={styles.imageContainer}>
+    <TouchableOpacity style={containerStyle} onPress={handlePress} activeOpacity={0.8}>
+      <View style={imageContainerStyle}>
         {listing.image_url ? (
           <Image
             source={{ uri: listing.image_url }}
@@ -103,7 +116,6 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: CARD_WIDTH,
     position: 'relative',
   },
   image: {

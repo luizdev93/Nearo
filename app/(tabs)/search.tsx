@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import type { Category } from '../../src/models/category_engine';
 import type { CategoryTemplate } from '../../src/models/category_engine';
 import { DynamicFilterPanel } from '../../src/components/category/DynamicFilterPanel';
 import { getCurrentLocation } from '../../src/utils/location';
+import { getSuggestedCategoriesForQuery } from '../../src/utils/search_keywords';
 
 export default function SearchScreen() {
   const { t, i18n } = useTranslation();
@@ -94,12 +95,32 @@ export default function SearchScreen() {
     if (query) search(query, {});
   };
 
+  const suggestedCategories = useMemo(() => {
+    const cats = leafCategories.map((c) => ({ slug: c.slug, name: c.name }));
+    return getSuggestedCategoriesForQuery(query, cats);
+  }, [query, leafCategories]);
+
+  const handleSuggestionTap = useCallback(
+    (slug: string) => {
+      const cat = leafCategories.find((c) => c.slug === slug);
+      if (!cat) return;
+      const newFilters: ListingFilters = {
+        ...filters,
+        category_id: cat.id,
+        category: cat.slug,
+      };
+      setFilters(newFilters);
+      search(query, newFilters);
+    },
+    [query, filters, leafCategories, search],
+  );
+
   const renderItem = ({ item }: { item: ListingCard }) => (
-    <ListingCardComponent listing={item} />
+    <ListingCardComponent listing={item} fullWidth />
   );
 
   const renderEmpty = () => {
-    if (isLoading) return <LoadingSkeletonGrid count={6} />;
+    if (isLoading) return <LoadingSkeletonGrid count={6} fullWidth />;
     if (!query && searchResults.length === 0) {
       return (
         <EmptyState
@@ -158,10 +179,19 @@ export default function SearchScreen() {
             onChangeText={setQuery}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
-            iconLeft={<Ionicons name="search-outline" size={20} color={colors.textTertiary} />}
+            size="large"
+            iconLeft={<Ionicons name="search-outline" size={22} color={colors.textTertiary} />}
             inputStyle={styles.searchInput}
           />
         </View>
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={handleSearch}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="search" size={20} color={colors.textInverse} />
+          <Text style={styles.searchButtonText}>{t('search.search', 'Search')}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.filterButton, hasActiveFilters && styles.filterButtonActive]}
           onPress={() => {
@@ -176,6 +206,34 @@ export default function SearchScreen() {
           />
         </TouchableOpacity>
       </View>
+
+      {/* Category suggestion chips — e.g. "Search iPhone in Electronics" */}
+      {query.trim().length >= 2 && suggestedCategories.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.suggestionScroll}
+          contentContainerStyle={styles.suggestionContent}
+        >
+          {suggestedCategories.map((s) => (
+            <TouchableOpacity
+              key={s.slug}
+              style={styles.suggestionChip}
+              onPress={() => handleSuggestionTap(s.slug)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="search-outline" size={14} color={colors.primary} />
+              <Text style={styles.suggestionChipText} numberOfLines={1}>
+                {t('search.in_category', {
+                  query: query.trim(),
+                  category: s.name,
+                  defaultValue: `{{query}} in {{category}}`,
+                })}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
 
       {/* Category Chips */}
       <ScrollView
@@ -237,11 +295,11 @@ export default function SearchScreen() {
 
       {/* Results */}
       <FlatList
+        key="search-results-single-col"
         data={searchResults}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
+        numColumns={1}
         contentContainerStyle={styles.list}
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
@@ -296,10 +354,26 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 0,
     backgroundColor: colors.surfaceSecondary,
+    minHeight: 52,
+  },
+  searchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    height: 52,
+    minWidth: 80,
+    borderRadius: borderRadius.button,
+    backgroundColor: colors.primary,
+  },
+  searchButtonText: {
+    ...typography.button,
+    color: colors.textInverse,
   },
   filterButton: {
-    width: 44,
-    height: 44,
+    width: 52,
+    height: 52,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.surfaceSecondary,
     alignItems: 'center',
@@ -307,6 +381,30 @@ const styles = StyleSheet.create({
   },
   filterButtonActive: {
     backgroundColor: colors.primary,
+  },
+  suggestionScroll: {
+    maxHeight: 44,
+    marginBottom: spacing.sm,
+  },
+  suggestionContent: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  suggestionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  suggestionChipText: {
+    ...typography.caption,
+    color: colors.text,
+    maxWidth: 200,
   },
   categoryScroll: {
     maxHeight: 40,
@@ -366,9 +464,6 @@ const styles = StyleSheet.create({
   list: {
     padding: spacing.lg,
     paddingTop: spacing.sm,
-  },
-  row: {
-    justifyContent: 'space-between',
   },
   footer: {
     padding: spacing.lg,

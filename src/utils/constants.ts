@@ -1,6 +1,6 @@
 export const APP_NAME = 'Nearo';
 
-export const LISTING_IMAGE_MAX_COUNT = 10;
+export const LISTING_IMAGE_MAX_COUNT = 6;
 export const LISTING_IMAGE_MAX_WIDTH = 1200;
 export const LISTING_IMAGE_QUALITY = 0.8;
 
