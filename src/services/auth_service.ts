@@ -71,11 +71,12 @@ export const authService = {
   /**
    * DEV ONLY: Sign in with a test user (email/password). Remove before production.
    * Requires Email provider enabled in Supabase. Creates test user on first use.
+   * In Supabase: Auth > Providers > Email > disable "Confirm email" to avoid rate limit.
    */
   async signInWithTestUser(): Promise<
     ServiceResponse<{ session: Session; user: User }>
   > {
-    const TEST_EMAIL = 'test@nearo.dev';
+    const TEST_EMAIL = 'dev-test@example.com';
     const TEST_PASSWORD = 'TestPass123!';
 
     try {
@@ -90,6 +91,7 @@ export const authService = {
           password: TEST_PASSWORD,
           options: {
             data: { full_name: 'Test User' },
+            emailRedirectTo: undefined,
           },
         });
         if (signUpError) return { data: null, error: signUpError.message };

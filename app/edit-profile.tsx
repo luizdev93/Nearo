@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import i18n from '../src/localization/i18n';
 import { colors, spacing, borderRadius, typography } from '../src/theme';
@@ -25,18 +24,25 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const setAuthUser = useAuthStore((s) => s.setUser);
-  const { updateProfile, isLoading } = useUserStore();
+  const { updateProfile, isLoading, error } = useUserStore();
 
   const [name, setName] = useState(user?.name ?? '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url ?? null);
   const [language, setLanguage] = useState(user?.language ?? 'en');
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  useEffect(() => {
+    if (user) useUserStore.getState().setProfile(user);
+  }, [user]);
 
   const handleChangePhoto = async () => {
     if (!user) return;
     const images = await pickImages(1);
     if (images.length === 0) return;
 
+    setIsUploadingPhoto(true);
     const { data: url } = await storageService.uploadProfileImage(images[0].uri, user.id);
+    setIsUploadingPhoto(false);
     if (url) setAvatarUrl(url);
   };
 
@@ -64,8 +70,13 @@ export default function EditProfileScreen() {
         {/* Avatar */}
         <View style={styles.avatarSection}>
           <Avatar uri={avatarUrl} name={name} size={100} />
-          <TouchableOpacity onPress={handleChangePhoto}>
-            <Text style={styles.changePhotoText}>{t('edit_profile.change_photo')}</Text>
+          <TouchableOpacity
+            onPress={handleChangePhoto}
+            disabled={isUploadingPhoto}
+          >
+            <Text style={[styles.changePhotoText, isUploadingPhoto && styles.changePhotoDisabled]}>
+              {isUploadingPhoto ? t('edit_profile.uploading_photo') : t('edit_profile.change_photo')}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -75,6 +86,7 @@ export default function EditProfileScreen() {
           placeholder={t('edit_profile.name_placeholder')}
           value={name}
           onChangeText={setName}
+          error={error}
         />
 
         {/* Language */}
@@ -129,6 +141,9 @@ const styles = StyleSheet.create({
   changePhotoText: {
     ...typography.label,
     color: colors.primary,
+  },
+  changePhotoDisabled: {
+    color: colors.textTertiary,
   },
   label: {
     ...typography.label,
