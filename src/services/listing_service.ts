@@ -10,7 +10,7 @@ import {
 } from '../models/listing';
 import { storageService } from './storage_service';
 import { FEED_PAGE_SIZE, FEATURED_LIMIT, PROMOTION_DURATION_HOURS } from '../utils/constants';
-import { getBoundingBox } from '../utils/location';
+import { getBoundingBox, haversineDistanceKm } from '../utils/location';
 
 interface PaginatedResponse<T> {
   items: T[];
@@ -200,18 +200,100 @@ export const listingService = {
     cursor: string | null,
   ): Promise<ServiceResponse<PaginatedResponse<ListingCard>>> {
     try {
+      let listingIdsFromAttributes: string[] | null = null;
+      if (
+        filters.category_id &&
+        filters.attribute_filters &&
+        Object.keys(filters.attribute_filters).length > 0
+      ) {
+        const { data: attrs } = await supabase
+          .from('attributes')
+          .select('id, key')
+          .eq('category_id', filters.category_id);
+        const keyToId = new Map((attrs ?? []).map((a: { id: string; key: string }) => [a.key, a.id]));
+        const conditions: Array<{ attribute_id: string; value: string }> = [];
+        for (const [key, val] of Object.entries(filters.attribute_filters)) {
+          const attrId = keyToId.get(key);
+          if (attrId == null) continue;
+          if (val === undefined || val === null || val === '') continue;
+          if (typeof val === 'object' && ('min' in val || 'max' in val)) {
+            let rangeQuery = supabase
+              .from('listing_attribute_values')
+              .select('listing_id')
+              .eq('attribute_id', attrId);
+            if (val.min != null && val.min !== '') {
+              rangeQuery = rangeQuery.gte('value', String(val.min));
+            }
+            if (val.max != null && val.max !== '') {
+              rangeQuery = rangeQuery.lte('value', String(val.max));
+            }
+            const { data: rangeRows } = await rangeQuery;
+            const ids = (rangeRows ?? []).map((r: { listing_id: string }) => r.listing_id);
+            if (ids.length === 0) {
+              listingIdsFromAttributes = [];
+              break;
+            }
+            listingIdsFromAttributes =
+              listingIdsFromAttributes == null
+                ? ids
+                : listingIdsFromAttributes.filter((id) => ids.includes(id));
+            continue;
+          }
+          const valueStr = typeof val === 'object' ? '' : String(val);
+          if (valueStr === '') continue;
+          const { data: rows } = await supabase
+            .from('listing_attribute_values')
+            .select('listing_id')
+            .eq('attribute_id', attrId)
+            .eq('value', valueStr);
+          const ids = (rows ?? []).map((r: { listing_id: string }) => r.listing_id);
+          if (ids.length === 0) {
+            listingIdsFromAttributes = [];
+            break;
+          }
+          listingIdsFromAttributes =
+            listingIdsFromAttributes == null
+              ? ids
+              : listingIdsFromAttributes.filter((id) => ids.includes(id));
+        }
+        if (listingIdsFromAttributes !== null && listingIdsFromAttributes.length === 0) {
+          return {
+            data: { items: [], cursor: null, hasMore: false },
+            error: null,
+          };
+        }
+      }
+
+      const userLat = filters.location_lat;
+      const userLng = filters.location_lng;
+      const needDistance =
+        (userLat != null && userLng != null) &&
+        (filters.sort_by === 'nearest' || filters.sort_by === 'farthest');
+
       let dbQuery = supabase
         .from('listings')
-        .select(`
+        .select(
+          needDistance
+            ? `
+          id, title, price, location_name, location_lat, location_lng, is_featured, created_at,
+          listing_images(url, position)
+        `
+            : `
           id, title, price, location_name, is_featured, created_at,
           listing_images(url, position)
-        `)
+        `,
+        )
         .eq('status', 'active');
 
+      if (listingIdsFromAttributes && listingIdsFromAttributes.length > 0) {
+        dbQuery = dbQuery.in('id', listingIdsFromAttributes);
+      }
       if (query.trim()) {
         dbQuery = dbQuery.or(`title.ilike.%${query}%,description.ilike.%${query}%`);
       }
-      if (filters.category) {
+      if (filters.category_id) {
+        dbQuery = dbQuery.eq('category_id', filters.category_id);
+      } else if (filters.category) {
         dbQuery = dbQuery.eq('category', filters.category);
       }
       if (filters.min_price !== undefined) {
@@ -256,11 +338,11 @@ export const listingService = {
       const { data, error } = await dbQuery;
       if (error) return { data: null, error: error.message };
 
-      const items: ListingCard[] = (data ?? []).map((item: any) => {
+      let items: ListingCard[] = (data ?? []).map((item: any) => {
         const sortedImages = (item.listing_images ?? []).sort(
           (a: any, b: any) => a.position - b.position,
         );
-        return {
+        const card: ListingCard = {
           id: item.id,
           title: item.title,
           price: item.price,
@@ -269,7 +351,33 @@ export const listingService = {
           image_url: sortedImages[0]?.url ?? null,
           created_at: item.created_at,
         };
+        if (
+          userLat != null &&
+          userLng != null &&
+          item.location_lat != null &&
+          item.location_lng != null
+        ) {
+          card.distance_km = haversineDistanceKm(
+            userLat,
+            userLng,
+            item.location_lat,
+            item.location_lng,
+          );
+        }
+        return card;
       });
+
+      if (
+        (filters.sort_by === 'nearest' || filters.sort_by === 'farthest') &&
+        userLat != null &&
+        userLng != null
+      ) {
+        items = [...items].sort((a, b) => {
+          const da = a.distance_km ?? Infinity;
+          const db = b.distance_km ?? Infinity;
+          return filters.sort_by === 'nearest' ? da - db : db - da;
+        });
+      }
 
       const lastItem = items[items.length - 1];
       return {
@@ -340,17 +448,47 @@ export const listingService = {
     ownerId: string,
   ): Promise<ServiceResponse<Listing>> {
     try {
+      const payload: Record<string, unknown> = {
+        title: input.title,
+        description: input.description,
+        price: input.price,
+        category: input.category,
+        condition: input.condition,
+        negotiable: input.negotiable,
+        owner_id: ownerId,
+        status: 'active',
+        location_lat: input.location_lat ?? null,
+        location_lng: input.location_lng ?? null,
+        location_name: input.location_name ?? null,
+      };
+      if (input.category_id) payload.category_id = input.category_id;
+
       const { data: listing, error } = await supabase
         .from('listings')
-        .insert({
-          ...input,
-          owner_id: ownerId,
-          status: 'active',
-        })
+        .insert(payload)
         .select('*')
         .single();
 
       if (error) return { data: null, error: error.message };
+
+      if (listing && input.attribute_values && Object.keys(input.attribute_values).length > 0 && input.category_id) {
+        const { data: attrs } = await supabase
+          .from('attributes')
+          .select('id, key')
+          .eq('category_id', input.category_id);
+        const keyToId = new Map((attrs ?? []).map((a: { id: string; key: string }) => [a.key, a.id]));
+        const rows = Object.entries(input.attribute_values)
+          .filter(([, v]) => v !== undefined && v !== null && v !== '')
+          .map(([key, value]) => ({
+            listing_id: listing.id,
+            attribute_id: keyToId.get(key),
+            value: String(value),
+          }))
+          .filter((r) => r.attribute_id);
+        if (rows.length > 0) {
+          await supabase.from('listing_attribute_values').insert(rows);
+        }
+      }
 
       const uploadPromises = imageUris.map(async (uri, index) => {
         const { data: url } = await storageService.uploadListingImage(uri, listing.id);

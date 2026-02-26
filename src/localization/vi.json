@@ -48,6 +48,7 @@
     "title": "Nearo",
     "featured": "Nổi bật",
     "nearby": "Gần đây",
+    "near_me": "Gần tôi",
     "recent": "Tin đăng mới",
     "empty": "Chưa có tin đăng. Hãy là người đầu tiên!"
   },
@@ -108,6 +109,8 @@
       "sort_newest": "Mới nhất",
       "sort_price_low": "Giá: Thấp đến Cao",
       "sort_price_high": "Giá: Cao đến Thấp",
+      "sort_nearest": "Gần nhất",
+      "sort_farthest": "Xa nhất",
       "apply": "Áp dụng bộ lọc",
       "clear": "Xóa tất cả"
     },

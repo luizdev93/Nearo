@@ -1,33 +1,32 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Modal,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, borderRadius, typography } from '../../src/theme';
 import { ScreenContainer } from '../../src/components/layout/ScreenContainer';
 import { TextInputField } from '../../src/components/form/TextInputField';
-import { GradientButton } from '../../src/components/ui/GradientButton';
-import { SecondaryButton } from '../../src/components/ui/SecondaryButton';
 import { ListingCardComponent } from '../../src/components/cards/ListingCard';
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { LoadingSkeletonGrid } from '../../src/components/feedback/LoadingSkeleton';
 import { useListingStore } from '../../src/state/listing_store';
-import { ListingFilters, ListingCondition } from '../../src/models/listing';
-import { CATEGORIES, Category } from '../../src/models/category';
+import { ListingFilters } from '../../src/models/listing';
 import { ListingCard } from '../../src/models/listing';
+import { categoryService } from '../../src/services/category_service';
+import type { Category } from '../../src/models/category_engine';
+import type { CategoryTemplate } from '../../src/models/category_engine';
+import { DynamicFilterPanel } from '../../src/components/category/DynamicFilterPanel';
+import { getCurrentLocation } from '../../src/utils/location';
 
 export default function SearchScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     searchResults,
     searchHasMore,
@@ -38,10 +37,35 @@ export default function SearchScreen() {
     clearSearch,
   } = useListingStore();
 
+  const [leafCategories, setLeafCategories] = useState<Category[]>([]);
+  const [filterTemplate, setFilterTemplate] = useState<CategoryTemplate | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [query, setQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<ListingFilters>({});
   const [tempFilters, setTempFilters] = useState<ListingFilters>({});
+
+  useEffect(() => {
+    categoryService.getLeafCategories().then(({ data }) => {
+      if (data) setLeafCategories(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!filters.category_id) {
+      setFilterTemplate(null);
+      return;
+    }
+    categoryService.getTemplate(filters.category_id).then(({ data }) => {
+      setFilterTemplate(data ?? null);
+    });
+  }, [filters.category_id]);
+
+  useEffect(() => {
+    getCurrentLocation().then((coords) => {
+      if (coords) setUserLocation({ lat: coords.latitude, lng: coords.longitude });
+    });
+  }, []);
 
   const handleSearch = useCallback(() => {
     search(query, filters);
@@ -52,9 +76,15 @@ export default function SearchScreen() {
   }, [query, filters]);
 
   const handleApplyFilters = () => {
-    setFilters(tempFilters);
+    const applied: ListingFilters = { ...tempFilters };
+    if ((tempFilters.radius_km != null || tempFilters.sort_by === 'nearest' || tempFilters.sort_by === 'farthest') && userLocation) {
+      applied.location_lat = userLocation.lat;
+      applied.location_lng = userLocation.lng;
+      if (tempFilters.radius_km != null) applied.radius_km = tempFilters.radius_km;
+    }
+    setFilters(applied);
     setShowFilters(false);
-    search(query, tempFilters);
+    search(query, applied);
   };
 
   const handleClearFilters = () => {
@@ -90,7 +120,33 @@ export default function SearchScreen() {
     );
   };
 
-  const hasActiveFilters = Object.keys(filters).length > 0;
+  const hasActiveFilters =
+    (filters.category_id ?? filters.category) != null ||
+    filters.min_price != null ||
+    filters.max_price != null ||
+    filters.condition != null ||
+    filters.negotiable === true ||
+    filters.radius_km != null ||
+    (filters.attribute_filters && Object.keys(filters.attribute_filters).length > 0) ||
+    (filters.sort_by != null && filters.sort_by !== 'newest');
+
+  const filterChipLabel = (): string[] => {
+    const labels: string[] = [];
+    const cat = leafCategories.find((c) => c.id === filters.category_id);
+    if (cat) labels.push(cat.name);
+    if (filters.min_price != null) labels.push(`Min ${filters.min_price}`);
+    if (filters.max_price != null) labels.push(`Max ${filters.max_price}`);
+    if (filters.condition) labels.push(filters.condition === 'new' ? 'New' : 'Used');
+    if (filters.negotiable) labels.push('Negotiable');
+    if (filters.radius_km != null) labels.push(`${filters.radius_km} km`);
+    if (filters.attribute_filters) {
+      for (const [k, v] of Object.entries(filters.attribute_filters)) {
+        if (v !== undefined && v !== null && v !== '') labels.push(`${k}: ${v}`);
+      }
+    }
+    if (filters.sort_by && filters.sort_by !== 'newest') labels.push(`Sort: ${filters.sort_by}`);
+    return labels;
+  };
 
   return (
     <ScreenContainer noPadding>
@@ -128,27 +184,56 @@ export default function SearchScreen() {
         style={styles.categoryScroll}
         contentContainerStyle={styles.categoryContent}
       >
-        {CATEGORIES.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[styles.categoryChip, filters.category === cat && styles.categoryChipActive]}
-            onPress={() => {
-              const newFilters = { ...filters, category: filters.category === cat ? undefined : cat };
-              setFilters(newFilters);
-              search(query, newFilters);
-            }}
-          >
-            <Text
-              style={[
-                styles.categoryChipText,
-                filters.category === cat && styles.categoryChipTextActive,
-              ]}
+        {leafCategories.map((cat) => {
+          const isSelected = filters.category_id === cat.id;
+          return (
+            <TouchableOpacity
+              key={cat.id}
+              style={[styles.categoryChip, isSelected && styles.categoryChipActive]}
+              onPress={() => {
+                const newFilters: ListingFilters = {
+                  ...filters,
+                  category_id: isSelected ? undefined : cat.id,
+                  category: isSelected ? undefined : cat.slug,
+                  attribute_filters: isSelected ? undefined : filters.attribute_filters,
+                };
+                setFilters(newFilters);
+                search(query, newFilters);
+              }}
             >
-              {t(`categories.${cat}`)}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.categoryChipText,
+                  isSelected && styles.categoryChipTextActive,
+                ]}
+              >
+                {cat.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
+
+      {/* Filter chips */}
+      {filterChipLabel().length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chipsScroll}
+          contentContainerStyle={styles.chipsContent}
+        >
+          {filterChipLabel().map((label, i) => (
+            <View key={i} style={styles.filterChip}>
+              <Text style={styles.filterChipText} numberOfLines={1}>
+                {label}
+              </Text>
+            </View>
+          ))}
+          <TouchableOpacity style={styles.clearChip} onPress={handleClearFilters}>
+            <Text style={styles.clearChipText}>{t('search.filter.clear')}</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
 
       {/* Results */}
       <FlatList
@@ -165,110 +250,26 @@ export default function SearchScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Filter Modal */}
-      <Modal visible={showFilters} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{t('search.filters')}</Text>
-            <TouchableOpacity onPress={() => setShowFilters(false)}>
-              <Ionicons name="close" size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            {/* Price Range */}
-            <Text style={styles.filterLabel}>{t('search.filter.price_range')}</Text>
-            <View style={styles.priceRow}>
-              <TextInputField
-                placeholder={t('search.filter.min_price')}
-                value={tempFilters.min_price?.toString() ?? ''}
-                onChangeText={(v) =>
-                  setTempFilters({ ...tempFilters, min_price: v ? Number(v) : undefined })
-                }
-                keyboardType="numeric"
-                inputStyle={styles.priceInput}
-              />
-              <Text style={styles.priceDash}>-</Text>
-              <TextInputField
-                placeholder={t('search.filter.max_price')}
-                value={tempFilters.max_price?.toString() ?? ''}
-                onChangeText={(v) =>
-                  setTempFilters({ ...tempFilters, max_price: v ? Number(v) : undefined })
-                }
-                keyboardType="numeric"
-                inputStyle={styles.priceInput}
-              />
-            </View>
-
-            {/* Condition */}
-            <Text style={styles.filterLabel}>{t('search.filter.condition')}</Text>
-            <View style={styles.conditionRow}>
-              {(['new', 'used'] as ListingCondition[]).map((cond) => (
-                <TouchableOpacity
-                  key={cond}
-                  style={[
-                    styles.conditionButton,
-                    tempFilters.condition === cond && styles.conditionActive,
-                  ]}
-                  onPress={() =>
-                    setTempFilters({
-                      ...tempFilters,
-                      condition: tempFilters.condition === cond ? undefined : cond,
-                    })
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.conditionText,
-                      tempFilters.condition === cond && styles.conditionTextActive,
-                    ]}
-                  >
-                    {t(`listing.create.condition_${cond}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Sort */}
-            <Text style={styles.filterLabel}>{t('search.filter.sort')}</Text>
-            {(['newest', 'price_asc', 'price_desc'] as const).map((sortKey) => (
-              <TouchableOpacity
-                key={sortKey}
-                style={[
-                  styles.sortOption,
-                  tempFilters.sort_by === sortKey && styles.sortOptionActive,
-                ]}
-                onPress={() => setTempFilters({ ...tempFilters, sort_by: sortKey })}
-              >
-                <Text
-                  style={[
-                    styles.sortOptionText,
-                    tempFilters.sort_by === sortKey && styles.sortOptionTextActive,
-                  ]}
-                >
-                  {t(`search.filter.sort_${sortKey}`)}
-                </Text>
-                {tempFilters.sort_by === sortKey && (
-                  <Ionicons name="checkmark" size={18} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <View style={styles.modalActions}>
-            <SecondaryButton
-              label={t('search.filter.clear')}
-              onPress={handleClearFilters}
-              style={styles.modalButton}
-            />
-            <GradientButton
-              label={t('search.filter.apply')}
-              onPress={handleApplyFilters}
-              style={styles.modalButton}
-            />
-          </View>
-        </SafeAreaView>
-      </Modal>
+      <DynamicFilterPanel
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        template={filterTemplate}
+        tempFilters={tempFilters}
+        onTempFiltersChange={setTempFilters}
+        onApply={handleApplyFilters}
+        onClear={handleClearFilters}
+        locale={i18n.language?.startsWith('vi') ? 'vi' : 'en'}
+        filterLabel={t('search.filters')}
+        applyLabel={t('search.filter.apply')}
+        clearLabel={t('search.filter.clear')}
+        sortOptions={[
+          { key: 'newest', label: t('search.filter.sort_newest') },
+          { key: 'price_asc', label: t('search.filter.sort_price_low') },
+          { key: 'price_desc', label: t('search.filter.sort_price_high') },
+          { key: 'nearest', label: t('search.filter.sort_nearest', 'Nearest') },
+          { key: 'farthest', label: t('search.filter.sort_farthest', 'Farthest') },
+        ]}
+      />
     </ScreenContainer>
   );
 }
@@ -333,6 +334,35 @@ const styles = StyleSheet.create({
   categoryChipTextActive: {
     color: colors.textInverse,
   },
+  chipsScroll: {
+    maxHeight: 40,
+    marginBottom: spacing.sm,
+  },
+  chipsContent: {
+    paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  filterChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceSecondary,
+    maxWidth: 120,
+  },
+  filterChipText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  clearChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  clearChipText: {
+    ...typography.caption,
+    color: colors.primary,
+  },
   list: {
     padding: spacing.lg,
     paddingTop: spacing.sm,
@@ -343,95 +373,5 @@ const styles = StyleSheet.create({
   footer: {
     padding: spacing.lg,
     alignItems: 'center',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalTitle: {
-    ...typography.h3,
-    color: colors.text,
-  },
-  modalContent: {
-    flex: 1,
-    padding: spacing.lg,
-  },
-  filterLabel: {
-    ...typography.label,
-    color: colors.text,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  priceInput: {
-    flex: 1,
-  },
-  priceDash: {
-    ...typography.body,
-    color: colors.textTertiary,
-  },
-  conditionRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  conditionButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  conditionActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  conditionText: {
-    ...typography.label,
-    color: colors.textSecondary,
-  },
-  conditionTextActive: {
-    color: colors.textInverse,
-  },
-  sortOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-  },
-  sortOptionActive: {
-    backgroundColor: colors.surfaceSecondary,
-  },
-  sortOptionText: {
-    ...typography.body,
-    color: colors.text,
-  },
-  sortOptionTextActive: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    padding: spacing.lg,
-    gap: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  modalButton: {
-    flex: 1,
   },
 });

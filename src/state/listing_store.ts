@@ -5,6 +5,7 @@ import { listingService } from '../services/listing_service';
 interface ListingState {
   featuredListings: ListingCard[];
   feedListings: ListingCard[];
+  feedFilters: ListingFilters | null;
   searchResults: ListingCard[];
   currentListing: ListingWithOwner | null;
   userListings: ListingCard[];
@@ -20,7 +21,7 @@ interface ListingState {
   error: string | null;
 
   loadFeatured: () => Promise<void>;
-  loadFeed: () => Promise<void>;
+  loadFeed: (filters?: ListingFilters) => Promise<void>;
   loadMoreFeed: () => Promise<void>;
   loadListing: (id: string) => Promise<void>;
   search: (query: string, filters: ListingFilters) => Promise<void>;
@@ -36,6 +37,7 @@ interface ListingState {
 export const useListingStore = create<ListingState>((set, get) => ({
   featuredListings: [],
   feedListings: [],
+  feedFilters: null,
   searchResults: [],
   currentListing: null,
   userListings: [],
@@ -55,48 +57,82 @@ export const useListingStore = create<ListingState>((set, get) => ({
     if (data) set({ featuredListings: data });
   },
 
-  loadFeed: async () => {
-    set({ isLoading: true, error: null });
-    const { data, error } = await listingService.getRecentListings(null);
-    if (error) {
-      set({ isLoading: false, error });
-    } else if (data) {
-      const seen = new Set<string>();
-      const items = data.items.filter((l) => {
-        if (seen.has(l.id)) return false;
-        seen.add(l.id);
-        return true;
-      });
-      set({
-        feedListings: items,
-        feedCursor: data.cursor,
-        feedHasMore: data.hasMore,
-        isLoading: false,
-      });
+  loadFeed: async (filters?: ListingFilters) => {
+    set({ isLoading: true, error: null, feedFilters: filters ?? null });
+    if (filters && Object.keys(filters).length > 0) {
+      const { data, error } = await listingService.searchListings('', filters, null);
+      if (error) {
+        set({ isLoading: false, error });
+      } else if (data) {
+        set({
+          feedListings: data.items,
+          feedCursor: data.cursor,
+          feedHasMore: data.hasMore,
+          isLoading: false,
+        });
+      }
+    } else {
+      const { data, error } = await listingService.getRecentListings(null);
+      if (error) {
+        set({ isLoading: false, error });
+      } else if (data) {
+        const seen = new Set<string>();
+        const items = data.items.filter((l) => {
+          if (seen.has(l.id)) return false;
+          seen.add(l.id);
+          return true;
+        });
+        set({
+          feedListings: items,
+          feedCursor: data.cursor,
+          feedHasMore: data.hasMore,
+          isLoading: false,
+        });
+      }
     }
   },
 
   loadMoreFeed: async () => {
-    const { feedCursor, feedHasMore, isLoadingMore } = get();
+    const { feedCursor, feedHasMore, isLoadingMore, feedFilters } = get();
     if (!feedHasMore || isLoadingMore) return;
 
     set({ isLoadingMore: true });
-    const { data } = await listingService.getRecentListings(feedCursor);
-    if (data) {
-      const existingIds = new Set(get().feedListings.map((l) => l.id));
-      const newItems = data.items.filter((l) => {
-        if (existingIds.has(l.id)) return false;
-        existingIds.add(l.id);
-        return true;
-      });
-      set((state) => ({
-        feedListings: [...state.feedListings, ...newItems],
-        feedCursor: data.cursor,
-        feedHasMore: data.hasMore,
-        isLoadingMore: false,
-      }));
+    if (feedFilters && Object.keys(feedFilters).length > 0) {
+      const { data } = await listingService.searchListings('', feedFilters, feedCursor);
+      if (data) {
+        const existingIds = new Set(get().feedListings.map((l) => l.id));
+        const newItems = data.items.filter((l) => {
+          if (existingIds.has(l.id)) return false;
+          existingIds.add(l.id);
+          return true;
+        });
+        set((state) => ({
+          feedListings: [...state.feedListings, ...newItems],
+          feedCursor: data.cursor,
+          feedHasMore: data.hasMore,
+          isLoadingMore: false,
+        }));
+      } else {
+        set({ isLoadingMore: false });
+      }
     } else {
-      set({ isLoadingMore: false });
+      const { data } = await listingService.getRecentListings(feedCursor);
+      if (data) {
+        const existingIds = new Set(get().feedListings.map((l) => l.id));
+        const newItems = data.items.filter((l) => {
+          if (existingIds.has(l.id)) return false;
+          existingIds.add(l.id);
+          return true;
+        });
+        set((state) => ({
+          feedListings: [...state.feedListings, ...newItems],
+          feedCursor: data.cursor,
+          feedHasMore: data.hasMore,
+          isLoadingMore: false,
+        }));
+      } else {
+        set({ isLoadingMore: false });
+      }
     }
   },
 

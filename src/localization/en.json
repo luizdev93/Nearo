@@ -48,6 +48,7 @@
     "title": "Nearo",
     "featured": "Featured",
     "nearby": "Nearby",
+    "near_me": "Near me",
     "recent": "Recent listings",
     "empty": "No listings yet. Be the first to post!"
   },
@@ -108,6 +109,8 @@
       "sort_newest": "Newest first",
       "sort_price_low": "Price: Low to High",
       "sort_price_high": "Price: High to Low",
+      "sort_nearest": "Nearest first",
+      "sort_farthest": "Farthest first",
       "apply": "Apply filters",
       "clear": "Clear all"
     },

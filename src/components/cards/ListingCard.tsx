@@ -77,11 +77,13 @@ export const ListingCardComponent = memo(function ListingCardComponent({
         <Text style={styles.title} numberOfLines={2}>
           {listing.title}
         </Text>
-        {listing.location_name && (
+        {(listing.distance_km != null || listing.location_name) && (
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={12} color={colors.textTertiary} />
             <Text style={styles.location} numberOfLines={1}>
-              {listing.location_name}
+              {listing.distance_km != null
+                ? `${listing.distance_km.toFixed(1)} km away`
+                : listing.location_name}
             </Text>
           </View>
         )}

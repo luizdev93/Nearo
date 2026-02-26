@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -22,11 +22,16 @@ import { LoadingSkeletonGrid } from '../../src/components/feedback/LoadingSkelet
 import { useListingStore } from '../../src/state/listing_store';
 import { useUserStore } from '../../src/state/user_store';
 import { useAuthStore } from '../../src/state/auth_store';
-import { ListingCard } from '../../src/models/listing';
+import { ListingCard, ListingFilters } from '../../src/models/listing';
 import { formatPrice } from '../../src/utils/formatters';
+import { categoryService } from '../../src/services/category_service';
+import type { Category } from '../../src/models/category_engine';
+import { getCurrentLocation } from '../../src/utils/location';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const FEATURED_CARD_WIDTH = SCREEN_WIDTH * 0.65;
+
+type FeedTab = 'recent' | 'near';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -34,6 +39,7 @@ export default function HomeScreen() {
   const {
     featuredListings,
     feedListings,
+    feedFilters,
     feedHasMore,
     isLoading,
     isLoadingMore,
@@ -44,16 +50,61 @@ export default function HomeScreen() {
   const session = useAuthStore((s) => s.session);
   const loadFavorites = useUserStore((s) => s.loadFavorites);
 
+  const [feedTab, setFeedTab] = useState<FeedTab>('recent');
+  const [leafCategories, setLeafCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    categoryService.getLeafCategories().then(({ data }) => {
+      if (data) setLeafCategories(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    getCurrentLocation().then((coords) => {
+      if (coords) setUserLocation({ lat: coords.latitude, lng: coords.longitude });
+    });
+  }, []);
+
   useEffect(() => {
     loadFeatured();
     loadFeed();
     if (session) loadFavorites();
   }, []);
 
+  useEffect(() => {
+    if (feedTab === 'near' && userLocation) {
+      loadFeed({
+        location_lat: userLocation.lat,
+        location_lng: userLocation.lng,
+        radius_km: 25,
+        sort_by: 'nearest',
+      });
+    } else if (feedTab === 'recent' && selectedCategoryId) {
+      const cat = leafCategories.find((c) => c.id === selectedCategoryId);
+      loadFeed(cat ? { category_id: selectedCategoryId, category: cat.slug } : undefined);
+    } else if (feedTab === 'recent' && !selectedCategoryId) {
+      loadFeed();
+    }
+  }, [feedTab, selectedCategoryId, userLocation, leafCategories]);
+
   const handleRefresh = useCallback(() => {
     loadFeatured();
-    loadFeed();
-  }, []);
+    if (feedTab === 'near' && userLocation) {
+      loadFeed({
+        location_lat: userLocation.lat,
+        location_lng: userLocation.lng,
+        radius_km: 25,
+        sort_by: 'nearest',
+      });
+    } else if (selectedCategoryId) {
+      const cat = leafCategories.find((c) => c.id === selectedCategoryId);
+      loadFeed(cat ? { category_id: selectedCategoryId, category: cat.slug } : undefined);
+    } else {
+      loadFeed();
+    }
+  }, [feedTab, selectedCategoryId, userLocation, leafCategories]);
 
   const renderFeaturedItem = ({ item }: { item: ListingCard }) => (
     <TouchableOpacity
@@ -80,6 +131,11 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
+  const handleTabChange = (tab: FeedTab) => {
+    setFeedTab(tab);
+    if (tab === 'recent') setSelectedCategoryId(null);
+  };
+
   const renderHeader = () => (
     <View>
       {featuredListings.length > 0 && (
@@ -95,7 +151,56 @@ export default function HomeScreen() {
           />
         </View>
       )}
-      <SectionHeader title={t('home.recent')} />
+      <View style={styles.tabRow}>
+        <TouchableOpacity
+          style={[styles.tab, feedTab === 'recent' && styles.tabActive]}
+          onPress={() => handleTabChange('recent')}
+        >
+          <Text style={[styles.tabText, feedTab === 'recent' && styles.tabTextActive]}>
+            {t('home.recent', 'Recent')}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, feedTab === 'near' && styles.tabActive]}
+          onPress={() => handleTabChange('near')}
+        >
+          <Text style={[styles.tabText, feedTab === 'near' && styles.tabTextActive]}>
+            {t('home.near_me', 'Near me')}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      {feedTab === 'recent' && leafCategories.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryScroll}
+          contentContainerStyle={styles.categoryContent}
+        >
+          <TouchableOpacity
+            style={[styles.categoryChip, !selectedCategoryId && styles.categoryChipActive]}
+            onPress={() => setSelectedCategoryId(null)}
+          >
+            <Text style={[styles.categoryChipText, !selectedCategoryId && styles.categoryChipTextActive]}>
+              {t('search.filter.category', 'All')}
+            </Text>
+          </TouchableOpacity>
+          {leafCategories.map((cat) => {
+            const isSelected = selectedCategoryId === cat.id;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.categoryChip, isSelected && styles.categoryChipActive]}
+                onPress={() => setSelectedCategoryId(isSelected ? null : cat.id)}
+              >
+                <Text style={[styles.categoryChipText, isSelected && styles.categoryChipTextActive]}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+      <SectionHeader title={feedTab === 'near' ? t('home.near_me', 'Near me') : t('home.recent', 'Recent')} />
     </View>
   );
 
@@ -182,6 +287,58 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textInverse,
     marginTop: 2,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  tab: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  tabActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  tabText: {
+    ...typography.label,
+    color: colors.textSecondary,
+  },
+  tabTextActive: {
+    color: colors.textInverse,
+  },
+  categoryScroll: {
+    maxHeight: 40,
+    marginBottom: spacing.sm,
+  },
+  categoryContent: {
+    paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  categoryChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  categoryChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  categoryChipText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  categoryChipTextActive: {
+    color: colors.textInverse,
   },
   row: {
     justifyContent: 'space-between',
