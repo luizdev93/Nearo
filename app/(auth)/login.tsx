@@ -18,7 +18,8 @@ import { isValidPhone } from '../../src/utils/validators';
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { sendOTP, isLoading, error, clearError } = useAuthStore();
+  const { sendOTP, signInWithGoogle, isLoading, error, clearError } =
+    useAuthStore();
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
@@ -34,6 +35,15 @@ export default function LoginScreen() {
     const success = await sendOTP(phone);
     if (success) {
       router.push({ pathname: '/(auth)/otp', params: { phone } });
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setPhoneError('');
+    clearError();
+    const success = await signInWithGoogle();
+    if (success) {
+      router.replace('/(tabs)');
     }
   };
 
@@ -64,6 +74,20 @@ export default function LoginScreen() {
             onPress={handleContinue}
             loading={isLoading}
             disabled={!phone.trim()}
+            size="lg"
+          />
+
+          <View style={styles.separator}>
+            <View style={styles.separatorLine} />
+            <Text style={styles.separatorText}>{t('auth.login.or')}</Text>
+            <View style={styles.separatorLine} />
+          </View>
+
+          <Button
+            title={t('auth.login.sign_in_with_google')}
+            onPress={handleGoogleSignIn}
+            loading={isLoading}
+            variant="outline"
             size="lg"
           />
         </View>
@@ -99,5 +123,20 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: spacing.xl,
+  },
+  separator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginVertical: spacing.sm,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  separatorText: {
+    ...typography.caption,
+    color: colors.textSecondary,
   },
 });

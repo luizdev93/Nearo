@@ -2,7 +2,7 @@ export interface User {
   id: string;
   name: string;
   avatar_url: string | null;
-  phone_number: string;
+  phone_number: string | null;
   verified: boolean;
   rating_average: number;
   rating_count: number;

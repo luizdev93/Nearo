@@ -22,7 +22,9 @@
       "subtitle": "Mua & bán tại địa phương",
       "phone_placeholder": "Số điện thoại",
       "continue": "Tiếp tục",
-      "invalid_phone": "Vui lòng nhập số điện thoại hợp lệ"
+      "invalid_phone": "Vui lòng nhập số điện thoại hợp lệ",
+      "or": "hoặc",
+      "sign_in_with_google": "Đăng nhập bằng Google"
     },
     "otp": {
       "title": "Xác minh số điện thoại",

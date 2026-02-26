@@ -13,6 +13,7 @@ interface AuthState {
   hydrate: () => Promise<void>;
   sendOTP: (phone: string) => Promise<boolean>;
   verifyOTP: (phone: string, code: string) => Promise<boolean>;
+  signInWithGoogle: () => Promise<boolean>;
   signOut: () => Promise<void>;
   setUser: (user: User) => void;
   clearError: () => void;
@@ -64,6 +65,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { data, error } = await authService.verifyOTP(phone, code);
     if (error || !data) {
       set({ isLoading: false, error: error ?? 'Verification failed' });
+      return false;
+    }
+    set({
+      session: data.session,
+      user: data.user,
+      isLoading: false,
+    });
+    return true;
+  },
+
+  signInWithGoogle: async () => {
+    set({ isLoading: true, error: null });
+    const { data, error } = await authService.signInWithGoogle();
+    if (error || !data) {
+      set({ isLoading: false, error: error ?? 'Google sign in failed' });
       return false;
     }
     set({

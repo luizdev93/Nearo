@@ -22,7 +22,9 @@
       "subtitle": "Buy & sell locally",
       "phone_placeholder": "Phone number",
       "continue": "Continue",
-      "invalid_phone": "Please enter a valid phone number"
+      "invalid_phone": "Please enter a valid phone number",
+      "or": "or",
+      "sign_in_with_google": "Sign in with Google"
     },
     "otp": {
       "title": "Verify your number",
