@@ -5,6 +5,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,7 +19,7 @@ import { isValidPhone } from '../../src/utils/validators';
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { sendOTP, signInWithGoogle, isLoading, error, clearError } =
+  const { sendOTP, signInWithGoogle, signInWithTestUser, isLoading, error, clearError } =
     useAuthStore();
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
@@ -42,6 +43,15 @@ export default function LoginScreen() {
     setPhoneError('');
     clearError();
     const success = await signInWithGoogle();
+    if (success) {
+      router.replace('/(tabs)');
+    }
+  };
+
+  const handleTestUserLogin = async () => {
+    setPhoneError('');
+    clearError();
+    const success = await signInWithTestUser();
     if (success) {
       router.replace('/(tabs)');
     }
@@ -90,6 +100,16 @@ export default function LoginScreen() {
             variant="outline"
             size="lg"
           />
+
+          <TouchableOpacity
+            style={styles.devButton}
+            onPress={handleTestUserLogin}
+            disabled={isLoading}
+          >
+            <Text style={styles.devButtonText}>
+              {t('auth.login.dev_test_user')}
+            </Text>
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -138,5 +158,15 @@ const styles = StyleSheet.create({
   separatorText: {
     ...typography.caption,
     color: colors.textSecondary,
+  },
+  devButton: {
+    marginTop: spacing['2xl'],
+    alignSelf: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  devButtonText: {
+    ...typography.caption,
+    color: colors.textTertiary,
   },
 });

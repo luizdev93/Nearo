@@ -68,6 +68,61 @@ export const authService = {
     }
   },
 
+  /**
+   * DEV ONLY: Sign in with a test user (email/password). Remove before production.
+   * Requires Email provider enabled in Supabase. Creates test user on first use.
+   */
+  async signInWithTestUser(): Promise<
+    ServiceResponse<{ session: Session; user: User }>
+  > {
+    const TEST_EMAIL = 'test@nearo.dev';
+    const TEST_PASSWORD = 'TestPass123!';
+
+    try {
+      let { data, error } = await supabase.auth.signInWithPassword({
+        email: TEST_EMAIL,
+        password: TEST_PASSWORD,
+      });
+
+      if (error?.message === 'Invalid login credentials') {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: TEST_EMAIL,
+          password: TEST_PASSWORD,
+          options: {
+            data: { full_name: 'Test User' },
+          },
+        });
+        if (signUpError) return { data: null, error: signUpError.message };
+        const retry = await supabase.auth.signInWithPassword({
+          email: TEST_EMAIL,
+          password: TEST_PASSWORD,
+        });
+        data = retry.data;
+        error = retry.error;
+      }
+
+      if (error) return { data: null, error: error.message };
+      if (!data?.session) return { data: null, error: 'No session returned' };
+
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', data.session.user.id)
+        .single();
+
+      if (profileError) return { data: null, error: profileError.message };
+
+      return {
+        data: { session: data.session, user: profile as User },
+        error: null,
+      };
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : 'Test login failed';
+      return { data: null, error: message };
+    }
+  },
+
   async signInWithGoogle(): Promise<
     ServiceResponse<{ session: Session; user: User }>
   > {

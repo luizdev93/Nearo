@@ -24,7 +24,8 @@
       "continue": "Continue",
       "invalid_phone": "Please enter a valid phone number",
       "or": "or",
-      "sign_in_with_google": "Sign in with Google"
+      "sign_in_with_google": "Sign in with Google",
+      "dev_test_user": "Dev: Login as test user"
     },
     "otp": {
       "title": "Verify your number",
